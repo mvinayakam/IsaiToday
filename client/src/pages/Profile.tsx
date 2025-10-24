@@ -2,10 +2,11 @@ import ProfileSection from "@/components/ProfileSection";
 import FeedCarousel from "@/components/FeedCarousel";
 import PlaylistCard from "@/components/PlaylistCard";
 import CreatePlaylistDialog from "@/components/CreatePlaylistDialog";
-import { useAuth, getLogoutUrl } from "@/hooks/use-auth";
+import { useAuth, getLogoutUrl, getLoginUrl } from "@/hooks/use-auth";
 import { useQuery } from "@tanstack/react-query";
 import type { Reaction, Song, Playlist } from "@shared/schema";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
 
 interface ReactionWithSongAndCount {
   reaction: Reaction;
@@ -29,7 +30,19 @@ export default function Profile() {
   if (!isAuthenticated || !user) {
     return (
       <div className="min-h-screen pt-16 md:pt-20 flex items-center justify-center">
-        <p className="text-lg text-muted-foreground">Please log in to view your profile</p>
+        <div className="max-w-md mx-auto px-4 text-center">
+          <h1 className="text-4xl font-bold mb-4">Your Profile</h1>
+          <p className="text-lg text-muted-foreground mb-8">
+            Sign in to view your profile, liked songs, and playlists
+          </p>
+          <Button
+            size="lg"
+            onClick={() => window.location.href = getLoginUrl()}
+            data-testid="button-login"
+          >
+            Login with Google
+          </Button>
+        </div>
       </div>
     );
   }
@@ -37,11 +50,7 @@ export default function Profile() {
   const name = `${user.firstName} ${user.lastName}`;
   
   const likedSongs = reactionsWithSongs.map((item) => ({
-    youtubeId: item.song.youtubeId,
-    title: item.song.title,
-    artist: item.song.artist,
-    story: "Liked this song",
-    sharedBy: name,
+    song: item.song,
     tags: [],
     likes: item.reactionCount,
     plays: 0,

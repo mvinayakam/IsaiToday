@@ -17,6 +17,7 @@ interface DiscoverGridProps {
   songs: DiscoverSong[];
   currentUserId?: string;
   availableTags?: string[];
+  selectedCloudTag?: string | null;
   onSongPlay?: (youtubeId: string) => void;
   onSongLike?: (youtubeId: string) => void;
   onSongShare?: (youtubeId: string) => void;
@@ -27,12 +28,20 @@ export default function DiscoverGrid({
   songs,
   currentUserId,
   availableTags = [],
+  selectedCloudTag,
   onSongPlay,
   onSongLike,
   onSongShare,
   onTagFilter
 }: DiscoverGridProps) {
-  const [selectedTag, setSelectedTag] = useState<string | null>(null);
+  const [selectedTag, setSelectedTag] = useState<string | null>(selectedCloudTag ?? null);
+  
+  // Sync with cloud tag selection
+  useEffect(() => {
+    if (selectedCloudTag !== undefined) {
+      setSelectedTag(selectedCloudTag);
+    }
+  }, [selectedCloudTag]);
   const [openPlayerIndex, setOpenPlayerIndex] = useState<number | null>(null);
   const [playerData, setPlayerData] = useState<{user?: User; artists: string[]; tags: string[]}>({
     artists: [],

@@ -38,7 +38,7 @@ export default function AuthForm({
           <div className="flex flex-col items-center mb-8">
             <div className="flex items-center gap-2 mb-2">
               <Music2 className="w-8 h-8 text-primary" />
-              <span className="text-2xl font-bold">IsaiToday</span>
+              <span className="text-2xl font-bold">IsaiToday™</span>
             </div>
             <h1 className="text-2xl font-semibold mb-2">
               {isLogin ? "Welcome back" : "Create your account"}

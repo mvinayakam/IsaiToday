@@ -1,4 +1,4 @@
-# IsaiToday Design Guidelines
+# IsaiToday™ Design Guidelines
 
 ## Design Approach: Reference-Based (Spotify × Notion Aesthetic)
 

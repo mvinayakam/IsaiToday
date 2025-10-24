@@ -26,7 +26,7 @@ export default function Navbar({
       <div className="max-w-7xl mx-auto px-4 md:px-6 h-full flex items-center justify-between gap-4">
         <div className="flex items-center gap-2">
           <Music2 className="w-6 h-6 md:w-8 md:h-8 text-primary" />
-          <span className="text-xl md:text-2xl font-bold tracking-tight">IsaiToday</span>
+          <span className="text-xl md:text-2xl font-bold tracking-tight">IsaiToday™</span>
         </div>
 
         <div className="hidden md:flex flex-1 max-w-md mx-8">
@@ -43,7 +43,7 @@ export default function Navbar({
         </div>
 
         <div className="flex items-center gap-2">
-          {isAuthenticated && user ? (
+          {isAuthenticated && user && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button
@@ -65,15 +65,6 @@ export default function Navbar({
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
-          ) : (
-            <Button 
-              variant="default" 
-              size="sm" 
-              onClick={() => window.location.href = getLoginUrl()}
-              data-testid="button-login"
-            >
-              Sign In
-            </Button>
           )}
         </div>
       </div>

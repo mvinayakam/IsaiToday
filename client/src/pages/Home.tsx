@@ -89,7 +89,7 @@ export default function Home() {
     return (
       <div className="min-h-screen pt-16 md:pt-20 flex items-center justify-center">
         <div className="max-w-md mx-auto px-4 text-center">
-          <h1 className="text-4xl font-bold mb-4">Welcome to IsaiToday</h1>
+          <h1 className="text-4xl font-bold mb-4">Welcome to IsaiToday™</h1>
           <p className="text-lg text-muted-foreground mb-8">
             Discover and share the stories behind your favorite songs
           </p>
@@ -107,7 +107,7 @@ export default function Home() {
 
   const feedSongs = feedData.map((item) => ({
     song: item.song,
-    story: item.story,
+    story: item.story ?? undefined,
     tags: [],
     likes: 0,
     plays: 0,
@@ -115,7 +115,7 @@ export default function Home() {
 
   const trendingSongs = trendingData.map((item) => ({
     song: item.song,
-    story: item.story,
+    story: item.story ?? undefined,
     tags: [],
     likes: item.reactionCount,
     plays: 0,

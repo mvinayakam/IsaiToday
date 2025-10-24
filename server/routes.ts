@@ -2,10 +2,10 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
-import { insertSongSchema, insertSongStorySchema, insertReactionSchema, insertPlaylistSchema, insertPlaylistSongSchema, insertTagSchema, insertAlbumSchema, insertLanguageSchema, insertArtistSchema, songs, songStories, reactions, users, type InsertSong } from "@shared/schema";
+import { insertSongSchema, insertSongStorySchema, insertReactionSchema, insertPlaylistSchema, insertPlaylistSongSchema, insertTagSchema, insertAlbumSchema, insertLanguageSchema, insertArtistSchema, songs, songStories, reactions, users, tags, songTags, type InsertSong } from "@shared/schema";
 import { seedDatabase } from "./seed";
 import { db } from "./db";
-import { eq, desc, sql } from "drizzle-orm";
+import { eq, desc, sql, and } from "drizzle-orm";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Auth middleware
@@ -343,6 +343,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching tags:", error);
       res.status(500).json({ message: "Failed to fetch tags" });
+    }
+  });
+
+  // Get tags with usage counts for tag cloud
+  app.get('/api/tags/cloud', async (req, res) => {
+    try {
+      const tagCloud = await db
+        .select({
+          id: tags.id,
+          name: tags.name,
+          count: sql<number>`count(${songTags.songId})::int`,
+        })
+        .from(tags)
+        .leftJoin(songTags, eq(tags.id, songTags.tagId))
+        .groupBy(tags.id, tags.name)
+        .orderBy(desc(sql`count(${songTags.songId})`));
+      
+      res.json(tagCloud);
+    } catch (error) {
+      console.error("Error fetching tag cloud:", error);
+      res.status(500).json({ message: "Failed to fetch tag cloud" });
     }
   });
 

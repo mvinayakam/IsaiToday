@@ -1,4 +1,4 @@
-# IsaiToday - Social Music Discovery Platform
+# IsaiToday™ - Social Music Discovery Platform
 
 ## Overview
 
