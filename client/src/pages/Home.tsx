@@ -91,7 +91,7 @@ export default function Home() {
         <div className="max-w-md mx-auto px-4 text-center">
           <h1 className="text-4xl font-bold mb-4">Welcome to IsaiToday™</h1>
           <p className="text-lg text-muted-foreground mb-8">
-            Discover and share the stories behind your favorite songs
+            Every song has a story - what's yours?
           </p>
           <Button
             size="lg"
