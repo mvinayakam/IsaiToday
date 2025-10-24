@@ -4,9 +4,12 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import Navbar from "@/components/Navbar";
+import FloatingAddButton from "@/components/FloatingAddButton";
 import Home from "@/pages/Home";
 import Discover from "@/pages/Discover";
 import Profile from "@/pages/Profile";
+import MyPosts from "@/pages/MyPosts";
+import MyLikes from "@/pages/MyLikes";
 import NotFound from "@/pages/not-found";
 import { Home as HomeIcon, Compass, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -79,6 +82,8 @@ function Router() {
       <Route path="/" component={Home} />
       <Route path="/discover" component={Discover} />
       <Route path="/profile" component={Profile} />
+      <Route path="/my-posts" component={MyPosts} />
+      <Route path="/my-likes" component={MyLikes} />
       <Route component={NotFound} />
     </Switch>
   );
@@ -103,6 +108,7 @@ export default function App() {
             <Router />
           </div>
           
+          <FloatingAddButton />
           <BottomNav />
         </div>
         <Toaster />

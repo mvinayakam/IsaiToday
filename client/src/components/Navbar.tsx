@@ -47,42 +47,50 @@ export default function Navbar({
         </div>
 
         <div className="flex items-center gap-2">
-          {isAuthenticated && user && (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="ghost"
-                  className="gap-2"
-                  data-testid="button-profile"
-                >
-                  <Avatar className="w-8 h-8">
-                    {user.profileImageUrl && <AvatarImage src={user.profileImageUrl} />}
-                    <AvatarFallback>{userName.slice(0, 2).toUpperCase()}</AvatarFallback>
-                  </Avatar>
-                  <span className="hidden md:inline text-sm font-medium">{userName}</span>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => setAddSongOpen(true)} data-testid="menu-add-song">
-                  <Plus className="w-4 h-4 mr-2" />
-                  Add Song
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => window.location.href = '/profile'} data-testid="menu-my-posts">
-                  <Music className="w-4 h-4 mr-2" />
-                  My Posts
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => window.location.href = '/profile'} data-testid="menu-my-likes">
-                  <Heart className="w-4 h-4 mr-2" />
-                  My Likes
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => window.location.href = getLogoutUrl()} data-testid="button-logout">
-                  <LogOut className="w-4 h-4 mr-2" />
-                  Logout
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+          {isAuthenticated && (
+            <>
+              <Button 
+                onClick={() => setAddSongOpen(true)}
+                data-testid="button-add-song-navbar"
+                className="gap-2"
+              >
+                <Plus className="w-4 h-4" />
+                <span className="hidden md:inline">Add Song</span>
+              </Button>
+              
+              {user && (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      className="gap-2"
+                      data-testid="button-profile"
+                    >
+                      <Avatar className="w-8 h-8">
+                        {user.profileImageUrl && <AvatarImage src={user.profileImageUrl} />}
+                        <AvatarFallback>{userName.slice(0, 2).toUpperCase()}</AvatarFallback>
+                      </Avatar>
+                      <span className="hidden md:inline text-sm font-medium">{userName}</span>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem onClick={() => window.location.href = '/my-posts'} data-testid="menu-my-posts">
+                      <Music className="w-4 h-4 mr-2" />
+                      My Posts
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => window.location.href = '/my-likes'} data-testid="menu-my-likes">
+                      <Heart className="w-4 h-4 mr-2" />
+                      My Likes
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={() => window.location.href = getLogoutUrl()} data-testid="button-logout">
+                      <LogOut className="w-4 h-4 mr-2" />
+                      Logout
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              )}
+            </>
           )}
         </div>
       </div>

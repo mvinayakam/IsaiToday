@@ -270,6 +270,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get user's posted songs with reaction counts
+  app.get('/api/users/:userId/songs', async (req, res) => {
+    try {
+      const userSongs = await db
+        .select({
+          song: songs,
+          reactionCount: sql<number>`(
+            SELECT COUNT(*) FROM ${reactions} r 
+            WHERE r.song_id = ${songs.id}
+          )::int`,
+        })
+        .from(songs)
+        .where(eq(songs.addedBy, req.params.userId))
+        .orderBy(desc(songs.createdAt))
+        .limit(50);
+      
+      res.json(userSongs);
+    } catch (error) {
+      console.error("Error fetching user songs:", error);
+      res.status(500).json({ message: "Failed to fetch user songs" });
+    }
+  });
+
   // Playlist routes
   app.get('/api/playlists', isAuthenticated, async (req: any, res) => {
     try {
