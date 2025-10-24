@@ -125,10 +125,10 @@ export default function AddSongDialog({ trigger }: AddSongDialogProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!youtubeUrl || !title || selectedArtists.length === 0 || !story) {
+    if (!youtubeUrl || !title || selectedArtists.length === 0 || selectedTags.length === 0 || !story) {
       toast({
         title: "Missing required fields",
-        description: "Please fill in YouTube URL, title, at least one artist, and your story",
+        description: "Please fill in YouTube URL, title, at least one artist, at least one tag, and your story",
         variant: "destructive",
       });
       return;
@@ -350,7 +350,7 @@ export default function AddSongDialog({ trigger }: AddSongDialogProps) {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="tags">Tags (Optional)</Label>
+            <Label htmlFor="tags">Tags * (Add at least one)</Label>
             <div className="flex gap-2">
               <Input
                 id="tags"
