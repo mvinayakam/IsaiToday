@@ -361,23 +361,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Link artist to song
+  // Link artist to song (collaborative metadata - any authenticated user can add)
   app.post('/api/songs/:songId/artists', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
-      
       if (!req.body.artistId || typeof req.body.artistId !== 'string') {
         return res.status(400).json({ message: "Invalid artistId" });
       }
       
-      // Verify song exists and user owns it
+      // Verify song exists
       const song = await storage.getSong(req.params.songId);
       if (!song) {
         return res.status(404).json({ message: "Song not found" });
-      }
-      
-      if (song.addedBy !== userId) {
-        return res.status(403).json({ message: "You can only modify songs you added" });
       }
       
       await storage.addArtistToSong({
@@ -436,23 +430,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Link tag to song
+  // Link tag to song (collaborative metadata - any authenticated user can add)
   app.post('/api/songs/:songId/tags', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
-      
       if (!req.body.tagId || typeof req.body.tagId !== 'string') {
         return res.status(400).json({ message: "Invalid tagId" });
       }
       
-      // Verify song exists and user owns it
+      // Verify song exists
       const song = await storage.getSong(req.params.songId);
       if (!song) {
         return res.status(404).json({ message: "Song not found" });
-      }
-      
-      if (song.addedBy !== userId) {
-        return res.status(403).json({ message: "You can only modify songs you added" });
       }
       
       await storage.addTagToSong({
