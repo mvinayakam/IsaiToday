@@ -1,0 +1,66 @@
+Build a full-stack web app called IsaiToday – a social discovery platform for sharing and exploring songs and related stories.
+
+Core features:
+
+Multi-user system with login via Google or email.
+
+Each user gets a Song of the Day (random YouTube track) on login, drawn from the global song pool.
+
+Users can like / react to songs and see a Feed (friends’ activity) and Discover (global trending songs).
+
+Users can create playlists, add songs they like, and export playlists to YouTube (generate a YouTube playlist link).
+
+Users can tag songs with existing hashtags; these tags help personalise recommendations and form tag-based groups.
+
+Responsive layout – desktop and mobile friendly.
+
+Tech preferences:
+
+Frontend: React (with Tailwind CSS for elegant, vibrant, and classy look – think Spotify × Notion aesthetic).
+
+Backend: Node.js + Express (or Next.js API routes if supported).
+
+Database: SQLite or PostgreSQL using Prisma ORM.
+
+Auth: simple JWT or session-based auth with bcrypt password hashing.
+
+YouTube integration: accept valid YouTube URLs, extract video ID, embed using iframe; use YouTube Data API v3 for metadata and playlist export.
+
+Feed endpoints: /api/song-of-day, /api/feed, /api/discover, /api/playlists.
+
+Model sketches:
+
+User(id, name, email, avatar, createdAt)
+Song(id, youtubeId, title, artist, tagsCsv, addedBy, createdAt)
+Reaction(id, userId, songId, type)
+Playlist(id, userId, title, createdAt)
+PlaylistSong(id, playlistId, songId, order)
+Tag(id, name)
+UserTag(userId, tagId)
+
+
+UI guidelines:
+
+Elegant dark mode with gradient accents and glassmorphism cards.
+
+Clean typography (e.g., Inter or Poppins).
+
+Smooth transitions on hover, subtle blur backgrounds, rounded corners.
+
+Song card: thumbnail → title + artist + reaction bar.
+
+Feed sections with horizontal scroll (“carousel” style).
+
+Use Tailwind utilities to achieve vibrant but minimal feel.
+
+Deliverables:
+
+Working local app with registration, login, song-of-day feed, and playlist CRUD.
+
+Simple seeded songs (5–10 YouTube links) for testing.
+
+Components: SongCard, FeedList, PlaylistEditor, TagSelector, Navbar, Profile.
+
+Ready to deploy on Replit web server.
+
+Focus on readability, clean component structure, and polished UI.
