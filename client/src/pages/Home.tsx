@@ -89,7 +89,6 @@ export default function Home() {
     return (
       <div className="min-h-screen pt-16 md:pt-20 flex items-center justify-center">
         <div className="max-w-md mx-auto px-4 text-center">
-          <h1 className="text-4xl font-bold mb-4">Welcome to IsaiToday™</h1>
           <p className="text-lg text-muted-foreground mb-8">
             Every song has a story - what's yours?
           </p>
