@@ -12,6 +12,8 @@ import type { Album, Language, Artist, Tag } from "@shared/schema";
 
 interface AddSongDialogProps {
   trigger?: React.ReactNode;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
 function extractYouTubeId(url: string): string | null {
@@ -35,8 +37,12 @@ function extractYouTubeId(url: string): string | null {
   return null;
 }
 
-export default function AddSongDialog({ trigger }: AddSongDialogProps) {
-  const [open, setOpen] = useState(false);
+export default function AddSongDialog({ trigger, open: externalOpen, onOpenChange: externalOnOpenChange }: AddSongDialogProps) {
+  const [internalOpen, setInternalOpen] = useState(false);
+  
+  // Use external state if provided, otherwise use internal state
+  const open = externalOpen !== undefined ? externalOpen : internalOpen;
+  const setOpen = externalOnOpenChange || setInternalOpen;
   const [youtubeUrl, setYoutubeUrl] = useState("");
   const [title, setTitle] = useState("");
   const [album, setAlbum] = useState("");

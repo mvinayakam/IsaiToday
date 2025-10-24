@@ -1,4 +1,4 @@
-import { Search, Music2, LogOut, Music, Heart } from "lucide-react";
+import { Search, Music2, LogOut, Music, Heart, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -8,7 +8,10 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
+import AddSongDialog from "@/components/AddSongDialog";
+import { useState } from "react";
 
 interface NavbarProps {
   onSearchChange?: (value: string) => void;
@@ -18,6 +21,7 @@ export default function Navbar({
   onSearchChange,
 }: NavbarProps) {
   const { user, isAuthenticated } = useAuth();
+  const [addSongOpen, setAddSongOpen] = useState(false);
 
   const userName = user ? `${user.firstName} ${user.lastName}` : '';
 
@@ -59,6 +63,11 @@ export default function Navbar({
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => setAddSongOpen(true)} data-testid="menu-add-song">
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add Song
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={() => window.location.href = '/profile'} data-testid="menu-my-posts">
                   <Music className="w-4 h-4 mr-2" />
                   My Posts
@@ -67,6 +76,7 @@ export default function Navbar({
                   <Heart className="w-4 h-4 mr-2" />
                   My Likes
                 </DropdownMenuItem>
+                <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={() => window.location.href = getLogoutUrl()} data-testid="button-logout">
                   <LogOut className="w-4 h-4 mr-2" />
                   Logout
@@ -76,6 +86,10 @@ export default function Navbar({
           )}
         </div>
       </div>
+      
+      {isAuthenticated && (
+        <AddSongDialog open={addSongOpen} onOpenChange={setAddSongOpen} />
+      )}
     </nav>
   );
 }
