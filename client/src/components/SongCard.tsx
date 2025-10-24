@@ -1,10 +1,10 @@
 import { Heart, Play, Share2, Edit } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import YouTubePlayerDialog from "./YouTubePlayerDialog";
 import EditSongDialog from "./EditSongDialog";
-import type { Song, SongStory, Artist, Tag } from "@shared/schema";
+import type { Song, SongStory, Artist, Tag, User } from "@shared/schema";
 
 interface SongCardProps {
   song: Song;
@@ -17,6 +17,18 @@ interface SongCardProps {
   onLike?: () => void;
   onPlay?: () => void;
   onShare?: () => void;
+  // Player control props
+  isPlayerOpen?: boolean;
+  onPlayerOpenChange?: (open: boolean) => void;
+  playerData?: {
+    user?: User;
+    artists: string[];
+    tags: string[];
+  };
+  onNext?: () => void;
+  onPrevious?: () => void;
+  hasNext?: boolean;
+  hasPrevious?: boolean;
 }
 
 export default function SongCard({
@@ -29,11 +41,17 @@ export default function SongCard({
   isLiked = false,
   onLike,
   onPlay,
-  onShare
+  onShare,
+  isPlayerOpen = false,
+  onPlayerOpenChange,
+  playerData,
+  onNext,
+  onPrevious,
+  hasNext = false,
+  hasPrevious = false
 }: SongCardProps) {
   const [liked, setLiked] = useState(isLiked);
   const [likeCount, setLikeCount] = useState(likes);
-  const [playerOpen, setPlayerOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [currentArtists, setCurrentArtists] = useState<string[]>([]);
   const [currentTags, setCurrentTags] = useState<string[]>(tags);
@@ -48,7 +66,6 @@ export default function SongCard({
   };
 
   const handlePlay = () => {
-    setPlayerOpen(true);
     onPlay?.();
   };
 
@@ -118,10 +135,19 @@ export default function SongCard({
       </div>
       
       <YouTubePlayerDialog
-        open={playerOpen}
-        onOpenChange={setPlayerOpen}
+        open={isPlayerOpen}
+        onOpenChange={onPlayerOpenChange || (() => {})}
         youtubeId={song.youtubeId}
         title={song.title}
+        song={song}
+        story={story}
+        user={playerData?.user}
+        artists={playerData?.artists || []}
+        tags={playerData?.tags || []}
+        onNext={onNext}
+        onPrevious={onPrevious}
+        hasNext={hasNext}
+        hasPrevious={hasPrevious}
       />
 
       <EditSongDialog

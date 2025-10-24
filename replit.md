@@ -12,7 +12,15 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes (October 24, 2025)
 
-### Latest Update: YouTube Playback & Enhanced Song Posting
+### Latest Update: Personalized YouTube Player with Story & Metadata
+- **Enhanced Player Modal**: Click any song to open a rich player showing the YouTube video alongside the user's personal story
+- **Story Display**: User avatar, name, and their full story about the song prominently displayed
+- **Complete Metadata**: Shows all song info including album, language, artists, and tags in the player
+- **Navigation**: Next/Previous buttons to browse through songs without closing the player
+- **User API**: Added `/api/users/:userId` endpoint to fetch user profiles for story attribution
+- **Personalization Focus**: The player emphasizes the personal connection - who shared the song and why they love it
+
+### Previous Update: YouTube Playback & Enhanced Song Posting
 - **YouTube Player**: Click any song thumbnail or play button to watch/listen in a modal player with autoplay
 - **Interactive Thumbnails**: Hover effects with image zoom and overlay darkening for better UX
 - **Album Field**: Users can add album names with autocomplete suggestions from existing albums

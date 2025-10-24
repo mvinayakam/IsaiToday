@@ -1,9 +1,8 @@
 import { Filter } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import SongCard from "./SongCard";
-import { useState } from "react";
-import type { Song, SongStory } from "@shared/schema";
+import { useState, useEffect } from "react";
+import type { Song, SongStory, Artist, Tag, User } from "@shared/schema";
 
 interface DiscoverSong {
   song: Song;
@@ -34,11 +33,73 @@ export default function DiscoverGrid({
   onTagFilter
 }: DiscoverGridProps) {
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
+  const [openPlayerIndex, setOpenPlayerIndex] = useState<number | null>(null);
+  const [playerData, setPlayerData] = useState<{user?: User; artists: string[]; tags: string[]}>({
+    artists: [],
+    tags: []
+  });
 
   const handleTagClick = (tag: string) => {
     const newTag = selectedTag === tag ? null : tag;
     setSelectedTag(newTag);
     onTagFilter?.(tag);
+  };
+
+  // Fetch data when player index changes
+  useEffect(() => {
+    if (openPlayerIndex !== null && songs[openPlayerIndex]) {
+      const currentSong = songs[openPlayerIndex];
+      
+      const fetchPlayerData = async () => {
+        try {
+          const promises = [
+            fetch(`/api/songs/${currentSong.song.id}/artists`).then(r => r.json()),
+            fetch(`/api/songs/${currentSong.song.id}/tags`).then(r => r.json())
+          ];
+          
+          if (currentSong.story?.userId) {
+            promises.push(
+              fetch(`/api/users/${currentSong.story.userId}`).then(r => r.json())
+            );
+          }
+          
+          const results = await Promise.all(promises);
+          const artists: Artist[] = results[0];
+          const songTags: Tag[] = results[1];
+          const user: User | undefined = results[2];
+          
+          setPlayerData({
+            user,
+            artists: artists.map(a => a.name),
+            tags: songTags.map(t => t.name)
+          });
+        } catch (error) {
+          console.error("Error fetching player data:", error);
+        }
+      };
+      
+      fetchPlayerData();
+    }
+  }, [openPlayerIndex, songs]);
+
+  const handleOpenPlayer = (index: number) => {
+    setOpenPlayerIndex(index);
+    const song = songs[index];
+    if (song) {
+      onSongPlay?.(song.song.youtubeId);
+    }
+  };
+
+  const handleNext = () => {
+    if (openPlayerIndex !== null && openPlayerIndex < songs.length - 1) {
+      setOpenPlayerIndex(openPlayerIndex + 1);
+    }
+  };
+
+  const handlePrevious = () => {
+    if (openPlayerIndex !== null && openPlayerIndex > 0) {
+      setOpenPlayerIndex(openPlayerIndex - 1);
+    }
   };
 
   return (
@@ -66,7 +127,7 @@ export default function DiscoverGrid({
       )}
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
-        {songs.map((item) => (
+        {songs.map((item, index) => (
           <SongCard
             key={item.song.youtubeId}
             song={item.song}
@@ -76,9 +137,16 @@ export default function DiscoverGrid({
             plays={item.plays}
             isLiked={item.isLiked}
             currentUserId={currentUserId}
-            onPlay={() => onSongPlay?.(item.song.youtubeId)}
+            onPlay={() => handleOpenPlayer(index)}
             onLike={() => onSongLike?.(item.song.youtubeId)}
             onShare={() => onSongShare?.(item.song.youtubeId)}
+            isPlayerOpen={openPlayerIndex === index}
+            onPlayerOpenChange={(open) => !open && setOpenPlayerIndex(null)}
+            playerData={openPlayerIndex === index ? playerData : undefined}
+            onNext={songs.length > 1 ? handleNext : undefined}
+            onPrevious={songs.length > 1 ? handlePrevious : undefined}
+            hasNext={index < songs.length - 1}
+            hasPrevious={index > 0}
           />
         ))}
       </div>
