@@ -2,6 +2,7 @@ import { Heart, Play, Share2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useState } from "react";
+import YouTubePlayerDialog from "./YouTubePlayerDialog";
 
 interface SongCardProps {
   youtubeId: string;
@@ -34,6 +35,7 @@ export default function SongCard({
 }: SongCardProps) {
   const [liked, setLiked] = useState(isLiked);
   const [likeCount, setLikeCount] = useState(likes);
+  const [playerOpen, setPlayerOpen] = useState(false);
 
   const thumbnailUrl = `https://img.youtube.com/vi/${youtubeId}/maxresdefault.jpg`;
 
@@ -43,29 +45,49 @@ export default function SongCard({
     onLike?.();
   };
 
+  const handlePlay = () => {
+    setPlayerOpen(true);
+    onPlay?.();
+  };
+
   return (
     <div 
       className="min-w-[240px] max-w-[320px] rounded-xl overflow-hidden backdrop-blur-md bg-card/50 border border-white/10 hover-elevate transition-all duration-200"
       data-testid={`card-song-${youtubeId}`}
     >
-      <div className="relative aspect-video rounded-t-xl overflow-hidden bg-muted">
+      <div 
+        className="relative aspect-video rounded-t-xl overflow-hidden bg-muted cursor-pointer group"
+        onClick={handlePlay}
+        data-testid={`thumbnail-${youtubeId}`}
+      >
         <img 
           src={thumbnailUrl} 
           alt={title}
-          className="w-full h-full object-cover"
+          className="w-full h-full object-cover transition-transform duration-200 group-hover:scale-105"
           loading="lazy"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-200" />
         <Button
           size="icon"
           variant="default"
-          className="absolute bottom-2 right-2"
-          onClick={onPlay}
+          className="absolute bottom-2 right-2 transition-transform duration-200 group-hover:scale-110"
+          onClick={(e) => {
+            e.stopPropagation();
+            handlePlay();
+          }}
           data-testid={`button-play-${youtubeId}`}
         >
           <Play className="w-4 h-4" fill="currentColor" />
         </Button>
       </div>
+      
+      <YouTubePlayerDialog
+        open={playerOpen}
+        onOpenChange={setPlayerOpen}
+        youtubeId={youtubeId}
+        title={title}
+      />
 
       <div className="p-4 space-y-3">
         <div>

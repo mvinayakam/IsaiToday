@@ -12,11 +12,13 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes (October 24, 2025)
 
-### Latest Update: Enhanced Song Posting with Rich Metadata
+### Latest Update: YouTube Playback & Enhanced Song Posting
+- **YouTube Player**: Click any song thumbnail or play button to watch/listen in a modal player with autoplay
+- **Interactive Thumbnails**: Hover effects with image zoom and overlay darkening for better UX
 - **Album Field**: Users can add album names with autocomplete suggestions from existing albums
 - **Language Field**: Users can specify song language with autocomplete suggestions
 - **Multi-Artist Support**: Users can add multiple artists to a song using chip-based multi-select UI
-- **Tags System**: Users can add multiple tags to songs for better categorization
+- **Tags System**: Users must add at least one tag to categorize songs (required field)
 - **Auto-creation**: Album, language, artist, and tag entries are automatically created if they don't exist
 - **Database Schema**: Added `albums`, `languages`, `artists` tables with `songArtists` and `songTags` junction tables
 - **Autocomplete APIs**: `/api/albums/search`, `/api/languages/search`, `/api/artists/search` endpoints
