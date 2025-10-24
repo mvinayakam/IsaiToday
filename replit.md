@@ -12,7 +12,19 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes (October 24, 2025)
 
-### Latest Update: Personalized YouTube Player with Story & Metadata ✅
+### Latest Update: Trademark Branding, Auth Gates, Tag Cloud & Comprehensive Seed Data ✅
+- **Trademark Branding**: Added IsaiToday™ symbol throughout the app (navbar, pages, meta tags, documentation)
+- **Authentication Gates**: Restricted Discover and Profile pages to authenticated users with branded login CTAs
+- **Consolidated Login**: Removed separate sign-in button from navbar; login only via page-level prompts (auth dropdown shown when logged in)
+- **Visual Tag Cloud**: Created TagCloud component with backend endpoint (`/api/tags/cloud`) aggregating tag usage counts via SQL
+- **Tag Filtering**: Integrated tag cloud into Discover page with functional filtering that controls song grid display
+- **Comprehensive Seed Data**: Seeded database with 50 curated Indian songs spanning Hindi, Tamil, Telugu, Malayalam with albums, artists, tags, and personal stories
+- **Type Safety Fixes**: Fixed TypeScript type inconsistencies (null vs undefined) for story fields across Home, Discover, and Profile pages
+- **Enhanced Profile Gate**: Added branded login CTA to Profile page for consistency with Discover
+- **End-to-End Tested**: All features verified working including auth flows, tag cloud interaction, player navigation, and story display
+- **Architect Approved**: All changes reviewed and approved with comprehensive documentation updates
+
+### Previous Update: Personalized YouTube Player with Story & Metadata ✅
 - **Enhanced Player Modal**: Click any song to open a rich player showing the YouTube video alongside the user's personal story
 - **Story Display**: User avatar, name, and their full story about the song prominently displayed in highlighted box
 - **Complete Metadata**: Shows all song info including album, language, artists, and tags in the player
