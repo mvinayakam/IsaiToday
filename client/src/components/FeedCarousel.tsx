@@ -1,13 +1,11 @@
 import { ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import SongCard from "./SongCard";
+import type { Song, SongStory } from "@shared/schema";
 
-interface Song {
-  youtubeId: string;
-  title: string;
-  artist: string;
-  story?: string;
-  sharedBy?: string;
+interface FeedSong {
+  song: Song;
+  story?: SongStory;
   tags?: string[];
   likes?: number;
   plays?: number;
@@ -16,7 +14,8 @@ interface Song {
 
 interface FeedCarouselProps {
   title: string;
-  songs: Song[];
+  songs: FeedSong[];
+  currentUserId?: string;
   onSeeAll?: () => void;
   onSongPlay?: (youtubeId: string) => void;
   onSongLike?: (youtubeId: string) => void;
@@ -26,6 +25,7 @@ interface FeedCarouselProps {
 export default function FeedCarousel({
   title,
   songs,
+  currentUserId,
   onSeeAll,
   onSongPlay,
   onSongLike,
@@ -52,13 +52,19 @@ export default function FeedCarousel({
         </div>
 
         <div className="flex overflow-x-auto gap-4 pb-4 snap-x snap-mandatory scrollbar-hide -mx-4 px-4">
-          {songs.map((song) => (
-            <div key={song.youtubeId} className="snap-start">
+          {songs.map((item) => (
+            <div key={item.song.youtubeId} className="snap-start">
               <SongCard
-                {...song}
-                onPlay={() => onSongPlay?.(song.youtubeId)}
-                onLike={() => onSongLike?.(song.youtubeId)}
-                onShare={() => onSongShare?.(song.youtubeId)}
+                song={item.song}
+                story={item.story}
+                tags={item.tags}
+                likes={item.likes}
+                plays={item.plays}
+                isLiked={item.isLiked}
+                currentUserId={currentUserId}
+                onPlay={() => onSongPlay?.(item.song.youtubeId)}
+                onLike={() => onSongLike?.(item.song.youtubeId)}
+                onShare={() => onSongShare?.(item.song.youtubeId)}
               />
             </div>
           ))}

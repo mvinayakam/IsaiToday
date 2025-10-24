@@ -3,13 +3,11 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import SongCard from "./SongCard";
 import { useState } from "react";
+import type { Song, SongStory } from "@shared/schema";
 
-interface Song {
-  youtubeId: string;
-  title: string;
-  artist: string;
-  story?: string;
-  sharedBy?: string;
+interface DiscoverSong {
+  song: Song;
+  story?: SongStory;
   tags?: string[];
   likes?: number;
   plays?: number;
@@ -17,7 +15,8 @@ interface Song {
 }
 
 interface DiscoverGridProps {
-  songs: Song[];
+  songs: DiscoverSong[];
+  currentUserId?: string;
   availableTags?: string[];
   onSongPlay?: (youtubeId: string) => void;
   onSongLike?: (youtubeId: string) => void;
@@ -27,6 +26,7 @@ interface DiscoverGridProps {
 
 export default function DiscoverGrid({
   songs,
+  currentUserId,
   availableTags = [],
   onSongPlay,
   onSongLike,
@@ -66,13 +66,19 @@ export default function DiscoverGrid({
       )}
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
-        {songs.map((song) => (
+        {songs.map((item) => (
           <SongCard
-            key={song.youtubeId}
-            {...song}
-            onPlay={() => onSongPlay?.(song.youtubeId)}
-            onLike={() => onSongLike?.(song.youtubeId)}
-            onShare={() => onSongShare?.(song.youtubeId)}
+            key={item.song.youtubeId}
+            song={item.song}
+            story={item.story}
+            tags={item.tags}
+            likes={item.likes}
+            plays={item.plays}
+            isLiked={item.isLiked}
+            currentUserId={currentUserId}
+            onPlay={() => onSongPlay?.(item.song.youtubeId)}
+            onLike={() => onSongLike?.(item.song.youtubeId)}
+            onShare={() => onSongShare?.(item.song.youtubeId)}
           />
         ))}
       </div>

@@ -1,15 +1,15 @@
-import { Heart, Play, Share2 } from "lucide-react";
+import { Heart, Play, Share2, Edit } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useState } from "react";
 import YouTubePlayerDialog from "./YouTubePlayerDialog";
+import EditSongDialog from "./EditSongDialog";
+import type { Song, SongStory, Artist, Tag } from "@shared/schema";
 
 interface SongCardProps {
-  youtubeId: string;
-  title: string;
-  artist: string;
-  story?: string;
-  sharedBy?: string;
+  song: Song;
+  story?: SongStory;
+  currentUserId?: string;
   tags?: string[];
   likes?: number;
   plays?: number;
@@ -20,11 +20,9 @@ interface SongCardProps {
 }
 
 export default function SongCard({
-  youtubeId,
-  title,
-  artist,
+  song,
   story,
-  sharedBy,
+  currentUserId,
   tags = [],
   likes = 0,
   plays = 0,
@@ -36,8 +34,12 @@ export default function SongCard({
   const [liked, setLiked] = useState(isLiked);
   const [likeCount, setLikeCount] = useState(likes);
   const [playerOpen, setPlayerOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
+  const [currentArtists, setCurrentArtists] = useState<string[]>([]);
+  const [currentTags, setCurrentTags] = useState<string[]>(tags);
 
-  const thumbnailUrl = `https://img.youtube.com/vi/${youtubeId}/maxresdefault.jpg`;
+  const thumbnailUrl = `https://img.youtube.com/vi/${song.youtubeId}/maxresdefault.jpg`;
+  const canEdit = currentUserId && song.addedBy === currentUserId;
 
   const handleLike = () => {
     setLiked(!liked);
@@ -50,24 +52,57 @@ export default function SongCard({
     onPlay?.();
   };
 
+  const handleEdit = async () => {
+    // Fetch current artists and tags before opening dialog
+    try {
+      const [artistsRes, tagsRes] = await Promise.all([
+        fetch(`/api/songs/${song.id}/artists`),
+        fetch(`/api/songs/${song.id}/tags`)
+      ]);
+      const artists: Artist[] = await artistsRes.json();
+      const songTags: Tag[] = await tagsRes.json();
+      
+      setCurrentArtists(artists.map(a => a.name));
+      setCurrentTags(songTags.map(t => t.name));
+      setEditOpen(true);
+    } catch (error) {
+      console.error("Error fetching song data:", error);
+      setEditOpen(true);
+    }
+  };
+
   return (
     <div 
       className="min-w-[240px] max-w-[320px] rounded-xl overflow-hidden backdrop-blur-md bg-card/50 border border-white/10 hover-elevate transition-all duration-200"
-      data-testid={`card-song-${youtubeId}`}
+      data-testid={`card-song-${song.youtubeId}`}
     >
       <div 
         className="relative aspect-video rounded-t-xl overflow-hidden bg-muted cursor-pointer group"
         onClick={handlePlay}
-        data-testid={`thumbnail-${youtubeId}`}
+        data-testid={`thumbnail-${song.youtubeId}`}
       >
         <img 
           src={thumbnailUrl} 
-          alt={title}
+          alt={song.title}
           className="w-full h-full object-cover transition-transform duration-200 group-hover:scale-105"
           loading="lazy"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
         <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-200" />
+        {canEdit && (
+          <Button
+            size="icon"
+            variant="secondary"
+            className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleEdit();
+            }}
+            data-testid={`button-edit-${song.youtubeId}`}
+          >
+            <Edit className="w-4 h-4" />
+          </Button>
+        )}
         <Button
           size="icon"
           variant="default"
@@ -76,7 +111,7 @@ export default function SongCard({
             e.stopPropagation();
             handlePlay();
           }}
-          data-testid={`button-play-${youtubeId}`}
+          data-testid={`button-play-${song.youtubeId}`}
         >
           <Play className="w-4 h-4" fill="currentColor" />
         </Button>
@@ -85,29 +120,33 @@ export default function SongCard({
       <YouTubePlayerDialog
         open={playerOpen}
         onOpenChange={setPlayerOpen}
-        youtubeId={youtubeId}
-        title={title}
+        youtubeId={song.youtubeId}
+        title={song.title}
+      />
+
+      <EditSongDialog
+        open={editOpen}
+        onOpenChange={setEditOpen}
+        song={song}
+        userStory={story}
+        currentArtists={currentArtists}
+        currentTags={currentTags}
       />
 
       <div className="p-4 space-y-3">
         <div>
-          {sharedBy && (
-            <p className="text-xs text-muted-foreground mb-1">
-              Shared by {sharedBy}
-            </p>
-          )}
-          <h3 className="font-semibold text-base line-clamp-2 mb-1" data-testid={`text-title-${youtubeId}`}>
-            {title}
+          <h3 className="font-semibold text-base line-clamp-2 mb-1" data-testid={`text-title-${song.youtubeId}`}>
+            {song.title}
           </h3>
-          <p className="text-sm text-muted-foreground line-clamp-1" data-testid={`text-artist-${youtubeId}`}>
-            {artist}
+          <p className="text-sm text-muted-foreground line-clamp-1" data-testid={`text-artist-${song.youtubeId}`}>
+            {song.artist}
           </p>
         </div>
 
-        {story && (
+        {story?.story && (
           <div className="pt-2 border-t border-white/5">
-            <p className="text-sm italic text-muted-foreground line-clamp-2" data-testid={`text-story-${youtubeId}`}>
-              "{story}"
+            <p className="text-sm italic text-muted-foreground line-clamp-2" data-testid={`text-story-${song.youtubeId}`}>
+              "{story.story}"
             </p>
           </div>
         )}
@@ -133,7 +172,7 @@ export default function SongCard({
             variant="ghost"
             className="gap-1.5 px-2"
             onClick={handleLike}
-            data-testid={`button-like-${youtubeId}`}
+            data-testid={`button-like-${song.youtubeId}`}
           >
             <Heart className={`w-4 h-4 ${liked ? 'fill-primary text-primary' : ''}`} />
             <span className="text-xs">{likeCount}</span>
@@ -147,7 +186,7 @@ export default function SongCard({
             variant="ghost"
             className="ml-auto px-2"
             onClick={onShare}
-            data-testid={`button-share-${youtubeId}`}
+            data-testid={`button-share-${song.youtubeId}`}
           >
             <Share2 className="w-4 h-4" />
           </Button>

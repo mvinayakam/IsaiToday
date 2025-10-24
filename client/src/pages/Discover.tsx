@@ -1,5 +1,6 @@
 import DiscoverGrid from "@/components/DiscoverGrid";
 import { useQuery } from "@tanstack/react-query";
+import { useAuth } from "@/hooks/use-auth";
 import type { Song, Tag } from "@shared/schema";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -9,6 +10,8 @@ interface TrendingSong {
 }
 
 export default function Discover() {
+  const { user } = useAuth();
+  
   const { data: trendingData = [], isLoading: trendingLoading } = useQuery<TrendingSong[]>({
     queryKey: ['/api/discover'],
   });
@@ -18,9 +21,7 @@ export default function Discover() {
   });
 
   const songs = trendingData.map((item) => ({
-    youtubeId: item.song.youtubeId,
-    title: item.song.title,
-    artist: item.song.artist,
+    song: item.song,
     tags: [],
     likes: item.reactionCount,
     plays: 0,
@@ -59,6 +60,7 @@ export default function Discover() {
         {songs.length > 0 ? (
           <DiscoverGrid
             songs={songs}
+            currentUserId={user?.id}
             availableTags={availableTags}
             onSongPlay={(id) => console.log('Play:', id)}
             onSongLike={(id) => console.log('Like:', id)}

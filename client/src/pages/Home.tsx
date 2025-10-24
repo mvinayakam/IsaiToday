@@ -104,22 +104,14 @@ export default function Home() {
   }
 
   const feedSongs = feedData.map((item) => ({
-    youtubeId: item.song.youtubeId,
-    title: item.song.title,
-    artist: item.song.artist,
-    story: "", // Stories will be fetched separately
-    sharedBy: `${item.user.firstName} ${item.user.lastName}`,
-    tags: [], // Tags will be fetched separately
+    song: item.song,
+    tags: [],
     likes: 0,
     plays: 0,
   }));
 
   const trendingSongs = trendingData.map((item) => ({
-    youtubeId: item.song.youtubeId,
-    title: item.song.title,
-    artist: item.song.artist,
-    story: "",
-    sharedBy: "",
+    song: item.song,
     tags: [],
     likes: item.reactionCount,
     plays: 0,
@@ -154,6 +146,7 @@ export default function Home() {
       <FeedCarousel
         title="Your Feed"
         songs={feedSongs}
+        currentUserId={user?.id}
         onSeeAll={() => console.log('See all feed')}
         onSongPlay={(id) => console.log('Play:', id)}
         onSongLike={(id) => console.log('Like:', id)}
@@ -163,6 +156,7 @@ export default function Home() {
       <FeedCarousel
         title="Trending Now"
         songs={trendingSongs}
+        currentUserId={user?.id}
         onSeeAll={() => console.log('See all trending')}
         onSongPlay={(id) => console.log('Play:', id)}
         onSongLike={(id) => console.log('Like:', id)}
