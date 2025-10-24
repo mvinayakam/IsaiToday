@@ -89,9 +89,9 @@ export default function Home() {
     return (
       <div className="min-h-screen pt-16 md:pt-20 flex items-center justify-center">
         <div className="max-w-md mx-auto px-4 text-center">
-          <p className="text-lg text-muted-foreground mb-8">
+          <h1 className="text-4xl md:text-5xl font-bold mb-8">
             Every song has a story - what's yours?
-          </p>
+          </h1>
           <Button
             size="lg"
             onClick={() => window.location.href = getLoginUrl()}
