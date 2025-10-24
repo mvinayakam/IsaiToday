@@ -7,9 +7,7 @@ import Navbar from "@/components/Navbar";
 import Home from "@/pages/Home";
 import Discover from "@/pages/Discover";
 import Profile from "@/pages/Profile";
-import Auth from "@/pages/Auth";
 import NotFound from "@/pages/not-found";
-import avatar from '@assets/generated_images/Female_user_profile_avatar_9e8367fc.png';
 import { Home as HomeIcon, Compass, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -81,7 +79,6 @@ function Router() {
       <Route path="/" component={Home} />
       <Route path="/discover" component={Discover} />
       <Route path="/profile" component={Profile} />
-      <Route path="/auth" component={Auth} />
       <Route component={NotFound} />
     </Switch>
   );
@@ -93,11 +90,7 @@ export default function App() {
       <TooltipProvider>
         <div className="min-h-screen bg-background text-foreground">
           <Navbar
-            userAvatar={avatar}
-            userName="Priya Reddy"
-            onMenuClick={() => console.log('Menu clicked')}
             onSearchChange={(value) => console.log('Search:', value)}
-            onProfileClick={() => console.log('Profile clicked')}
           />
           
           <div className="hidden md:block fixed top-16 md:top-20 left-0 right-0 z-40 border-b border-white/10 backdrop-blur-xl bg-background/80">

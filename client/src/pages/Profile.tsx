@@ -1,62 +1,113 @@
 import ProfileSection from "@/components/ProfileSection";
 import FeedCarousel from "@/components/FeedCarousel";
 import PlaylistCard from "@/components/PlaylistCard";
-import avatar from '@assets/generated_images/Male_user_profile_avatar_e9b4c3bb.png';
+import { useAuth, getLogoutUrl } from "@/hooks/use-auth";
+import { useQuery } from "@tanstack/react-query";
+import type { Reaction, Song, Playlist } from "@shared/schema";
+import { Skeleton } from "@/components/ui/skeleton";
 
-const mockLikedSongs = [
-  { youtubeId: "YR12Z8f1Dh8", title: "Mere Sapno Ki Rani", artist: "Kishore Kumar", tags: ["classic", "romantic", "kishore"], likes: 892, plays: 9821, isLiked: true },
-  { youtubeId: "3Tqjf6teI-Q", title: "Roja Janeman", artist: "A R Rahman, S P Balasubrahmanyam", tags: ["ar-rahman", "tamil"], likes: 2134, plays: 23456, isLiked: true },
-  { youtubeId: "6ste3pOXLto", title: "Kanne Kalaimaane", artist: "Ilaiyaraja", tags: ["ilaiyaraja", "tamil", "melody"], likes: 1456, plays: 16789, isLiked: true },
-];
-
-const mockPlaylists = [
-  { id: "1", title: "Classic Kishore Hits", songCount: 24 },
-  { id: "2", title: "A R Rahman Magic", songCount: 18 },
-  { id: "3", title: "Ilaiyaraja Melodies", songCount: 42 },
-];
+interface ReactionWithSongAndCount {
+  reaction: Reaction;
+  song: Song;
+  reactionCount: number;
+}
 
 export default function Profile() {
+  const { user, isAuthenticated } = useAuth();
+
+  const { data: reactionsWithSongs = [], isLoading: reactionsLoading } = useQuery<ReactionWithSongAndCount[]>({
+    queryKey: [`/api/users/${user?.id}/reactions`],
+    enabled: isAuthenticated && !!user,
+  });
+
+  const { data: playlists = [], isLoading: playlistsLoading } = useQuery<Playlist[]>({
+    queryKey: ['/api/playlists'],
+    enabled: isAuthenticated,
+  });
+
+  if (!isAuthenticated || !user) {
+    return (
+      <div className="min-h-screen pt-16 md:pt-20 flex items-center justify-center">
+        <p className="text-lg text-muted-foreground">Please log in to view your profile</p>
+      </div>
+    );
+  }
+
+  const name = `${user.firstName} ${user.lastName}`;
+  
+  const likedSongs = reactionsWithSongs.map((item) => ({
+    youtubeId: item.song.youtubeId,
+    title: item.song.title,
+    artist: item.song.artist,
+    story: "Liked this song",
+    sharedBy: name,
+    tags: [],
+    likes: item.reactionCount,
+    plays: 0,
+    isLiked: true,
+  }));
+
   return (
     <div className="min-h-screen pt-16 md:pt-20">
       <div className="py-12">
         <ProfileSection
-          avatar={avatar}
-          name="Arjun Sharma"
-          email="arjun.sharma@example.com"
-          tags={["classic", "romantic", "bollywood", "tamil", "melody"]}
+          avatar={user.profileImageUrl || undefined}
+          name={name}
+          email={user.email}
+          tags={[]}
           stats={{
-            songsLiked: 342,
-            playlists: 12,
-            following: 87
+            songsLiked: reactionsWithSongs.length,
+            playlists: playlists.length,
+            following: 0
           }}
           onEditProfile={() => console.log('Edit profile')}
-          onLogout={() => console.log('Logout')}
+          onLogout={() => window.location.href = getLogoutUrl()}
         />
       </div>
 
-      <FeedCarousel
-        title="Recently Liked"
-        songs={mockLikedSongs}
-        onSeeAll={() => console.log('See all liked')}
-        onSongPlay={(id) => console.log('Play:', id)}
-        onSongLike={(id) => console.log('Unlike:', id)}
-        onSongShare={(id) => console.log('Share:', id)}
-      />
+      {reactionsLoading ? (
+        <div className="py-8">
+          <div className="max-w-7xl mx-auto px-4 md:px-6">
+            <Skeleton className="h-64 rounded-lg" />
+          </div>
+        </div>
+      ) : likedSongs.length > 0 ? (
+        <FeedCarousel
+          title="Recently Liked"
+          songs={likedSongs}
+          onSeeAll={() => console.log('See all liked')}
+          onSongPlay={(id) => console.log('Play:', id)}
+          onSongLike={(id) => console.log('Unlike:', id)}
+          onSongShare={(id) => console.log('Share:', id)}
+        />
+      ) : null}
 
       <section className="py-8 md:py-12">
         <div className="max-w-7xl mx-auto px-4 md:px-6">
           <h2 className="text-2xl md:text-3xl font-semibold mb-6">My Playlists</h2>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-            {mockPlaylists.map((playlist) => (
-              <PlaylistCard
-                key={playlist.id}
-                {...playlist}
-                onClick={() => console.log('Open playlist:', playlist.id)}
-                onPlay={() => console.log('Play playlist:', playlist.id)}
-                onMore={() => console.log('More options:', playlist.id)}
-              />
-            ))}
-          </div>
+          {playlistsLoading ? (
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+              {[1, 2, 3, 4].map((i) => (
+                <Skeleton key={i} className="h-32 rounded-lg" />
+              ))}
+            </div>
+          ) : playlists.length > 0 ? (
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+              {playlists.map((playlist) => (
+                <PlaylistCard
+                  key={playlist.id}
+                  id={playlist.id}
+                  title={playlist.title}
+                  songCount={0}
+                  onClick={() => console.log('Open playlist:', playlist.id)}
+                  onPlay={() => console.log('Play playlist:', playlist.id)}
+                  onMore={() => console.log('More options:', playlist.id)}
+                />
+              ))}
+            </div>
+          ) : (
+            <p className="text-muted-foreground">No playlists yet. Create your first playlist!</p>
+          )}
         </div>
       </section>
     </div>

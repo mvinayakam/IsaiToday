@@ -1,38 +1,301 @@
-import { type User, type InsertUser } from "@shared/schema";
-import { randomUUID } from "crypto";
-
-// modify the interface with any CRUD methods
-// you might need
+import {
+  users,
+  songs,
+  songStories,
+  reactions,
+  playlists,
+  playlistSongs,
+  tags,
+  songTags,
+  songOfTheDay,
+  type User,
+  type UpsertUser,
+  type Song,
+  type InsertSong,
+  type SongStory,
+  type InsertSongStory,
+  type Reaction,
+  type InsertReaction,
+  type Playlist,
+  type InsertPlaylist,
+  type PlaylistSong,
+  type InsertPlaylistSong,
+  type Tag,
+  type InsertTag,
+  type SongTag,
+  type InsertSongTag,
+  type SongOfTheDay,
+  type InsertSongOfTheDay,
+} from "@shared/schema";
+import { db } from "./db";
+import { eq, and, desc, sql, inArray } from "drizzle-orm";
 
 export interface IStorage {
+  // User operations (required for Replit Auth)
   getUser(id: string): Promise<User | undefined>;
-  getUserByUsername(username: string): Promise<User | undefined>;
-  createUser(user: InsertUser): Promise<User>;
+  upsertUser(user: UpsertUser): Promise<User>;
+
+  // Song operations
+  getSong(id: string): Promise<Song | undefined>;
+  getSongByYoutubeId(youtubeId: string): Promise<Song | undefined>;
+  createSong(song: InsertSong): Promise<Song>;
+  getAllSongs(): Promise<Song[]>;
+  
+  // Song story operations
+  getSongStory(songId: string, userId: string): Promise<SongStory | undefined>;
+  createSongStory(story: InsertSongStory): Promise<SongStory>;
+  updateSongStory(id: string, story: string): Promise<SongStory>;
+  getSongStoriesBySongId(songId: string): Promise<SongStory[]>;
+  
+  // Reaction operations
+  getReaction(songId: string, userId: string, type: string): Promise<Reaction | undefined>;
+  createReaction(reaction: InsertReaction): Promise<Reaction>;
+  deleteReaction(id: string): Promise<void>;
+  getReactionsBySongId(songId: string): Promise<Reaction[]>;
+  getReactionsByUserId(userId: string): Promise<Reaction[]>;
+  
+  // Playlist operations
+  getPlaylist(id: string): Promise<Playlist | undefined>;
+  getPlaylistsByUserId(userId: string): Promise<Playlist[]>;
+  createPlaylist(playlist: InsertPlaylist): Promise<Playlist>;
+  updatePlaylist(id: string, title: string): Promise<Playlist>;
+  deletePlaylist(id: string): Promise<void>;
+  
+  // Playlist song operations
+  addSongToPlaylist(playlistSong: InsertPlaylistSong): Promise<PlaylistSong>;
+  removeSongFromPlaylist(playlistId: string, songId: string): Promise<void>;
+  getPlaylistSongs(playlistId: string): Promise<PlaylistSong[]>;
+  
+  // Tag operations
+  getTag(id: string): Promise<Tag | undefined>;
+  getTagByName(name: string): Promise<Tag | undefined>;
+  createTag(tag: InsertTag): Promise<Tag>;
+  getAllTags(): Promise<Tag[]>;
+  
+  // Song tag operations
+  addTagToSong(songTag: InsertSongTag): Promise<SongTag>;
+  removeTagFromSong(songId: string, tagId: string): Promise<void>;
+  getSongTags(songId: string): Promise<SongTag[]>;
+  
+  // Song of the day operations
+  getTodaysSongForUser(userId: string): Promise<SongOfTheDay | undefined>;
+  createSongOfTheDay(sotd: InsertSongOfTheDay): Promise<SongOfTheDay>;
 }
 
-export class MemStorage implements IStorage {
-  private users: Map<string, User>;
-
-  constructor() {
-    this.users = new Map();
-  }
-
+export class DatabaseStorage implements IStorage {
+  // User operations
   async getUser(id: string): Promise<User | undefined> {
-    return this.users.get(id);
-  }
-
-  async getUserByUsername(username: string): Promise<User | undefined> {
-    return Array.from(this.users.values()).find(
-      (user) => user.username === username,
-    );
-  }
-
-  async createUser(insertUser: InsertUser): Promise<User> {
-    const id = randomUUID();
-    const user: User = { ...insertUser, id };
-    this.users.set(id, user);
+    const [user] = await db.select().from(users).where(eq(users.id, id));
     return user;
   }
+
+  async upsertUser(userData: UpsertUser): Promise<User> {
+    const [user] = await db
+      .insert(users)
+      .values(userData)
+      .onConflictDoUpdate({
+        target: users.id,
+        set: {
+          ...userData,
+          updatedAt: new Date(),
+        },
+      })
+      .returning();
+    return user;
+  }
+
+  // Song operations
+  async getSong(id: string): Promise<Song | undefined> {
+    const [song] = await db.select().from(songs).where(eq(songs.id, id));
+    return song;
+  }
+
+  async getSongByYoutubeId(youtubeId: string): Promise<Song | undefined> {
+    const [song] = await db.select().from(songs).where(eq(songs.youtubeId, youtubeId));
+    return song;
+  }
+
+  async createSong(songData: InsertSong): Promise<Song> {
+    const [song] = await db.insert(songs).values(songData).returning();
+    return song;
+  }
+
+  async getAllSongs(): Promise<Song[]> {
+    return await db.select().from(songs).orderBy(desc(songs.createdAt));
+  }
+
+  // Song story operations
+  async getSongStory(songId: string, userId: string): Promise<SongStory | undefined> {
+    const [story] = await db
+      .select()
+      .from(songStories)
+      .where(and(eq(songStories.songId, songId), eq(songStories.userId, userId)));
+    return story;
+  }
+
+  async createSongStory(storyData: InsertSongStory): Promise<SongStory> {
+    const [story] = await db.insert(songStories).values(storyData).returning();
+    return story;
+  }
+
+  async updateSongStory(id: string, storyText: string): Promise<SongStory> {
+    const [story] = await db
+      .update(songStories)
+      .set({ story: storyText })
+      .where(eq(songStories.id, id))
+      .returning();
+    return story;
+  }
+
+  async getSongStoriesBySongId(songId: string): Promise<SongStory[]> {
+    return await db.select().from(songStories).where(eq(songStories.songId, songId));
+  }
+
+  // Reaction operations
+  async getReaction(songId: string, userId: string, type: string): Promise<Reaction | undefined> {
+    const [reaction] = await db
+      .select()
+      .from(reactions)
+      .where(
+        and(
+          eq(reactions.songId, songId),
+          eq(reactions.userId, userId),
+          eq(reactions.type, type)
+        )
+      );
+    return reaction;
+  }
+
+  async createReaction(reactionData: InsertReaction): Promise<Reaction> {
+    const [reaction] = await db.insert(reactions).values(reactionData).returning();
+    return reaction;
+  }
+
+  async deleteReaction(id: string): Promise<void> {
+    await db.delete(reactions).where(eq(reactions.id, id));
+  }
+
+  async getReactionsBySongId(songId: string): Promise<Reaction[]> {
+    return await db.select().from(reactions).where(eq(reactions.songId, songId));
+  }
+
+  async getReactionsByUserId(userId: string): Promise<Reaction[]> {
+    return await db
+      .select()
+      .from(reactions)
+      .where(eq(reactions.userId, userId))
+      .orderBy(desc(reactions.createdAt));
+  }
+
+  // Playlist operations
+  async getPlaylist(id: string): Promise<Playlist | undefined> {
+    const [playlist] = await db.select().from(playlists).where(eq(playlists.id, id));
+    return playlist;
+  }
+
+  async getPlaylistsByUserId(userId: string): Promise<Playlist[]> {
+    return await db
+      .select()
+      .from(playlists)
+      .where(eq(playlists.userId, userId))
+      .orderBy(desc(playlists.updatedAt));
+  }
+
+  async createPlaylist(playlistData: InsertPlaylist): Promise<Playlist> {
+    const [playlist] = await db.insert(playlists).values(playlistData).returning();
+    return playlist;
+  }
+
+  async updatePlaylist(id: string, title: string): Promise<Playlist> {
+    const [playlist] = await db
+      .update(playlists)
+      .set({ title, updatedAt: new Date() })
+      .where(eq(playlists.id, id))
+      .returning();
+    return playlist;
+  }
+
+  async deletePlaylist(id: string): Promise<void> {
+    await db.delete(playlists).where(eq(playlists.id, id));
+  }
+
+  // Playlist song operations
+  async addSongToPlaylist(playlistSongData: InsertPlaylistSong): Promise<PlaylistSong> {
+    const [playlistSong] = await db.insert(playlistSongs).values(playlistSongData).returning();
+    return playlistSong;
+  }
+
+  async removeSongFromPlaylist(playlistId: string, songId: string): Promise<void> {
+    await db
+      .delete(playlistSongs)
+      .where(and(eq(playlistSongs.playlistId, playlistId), eq(playlistSongs.songId, songId)));
+  }
+
+  async getPlaylistSongs(playlistId: string): Promise<PlaylistSong[]> {
+    return await db
+      .select()
+      .from(playlistSongs)
+      .where(eq(playlistSongs.playlistId, playlistId))
+      .orderBy(playlistSongs.order);
+  }
+
+  // Tag operations
+  async getTag(id: string): Promise<Tag | undefined> {
+    const [tag] = await db.select().from(tags).where(eq(tags.id, id));
+    return tag;
+  }
+
+  async getTagByName(name: string): Promise<Tag | undefined> {
+    const [tag] = await db.select().from(tags).where(eq(tags.name, name));
+    return tag;
+  }
+
+  async createTag(tagData: InsertTag): Promise<Tag> {
+    const [tag] = await db.insert(tags).values(tagData).returning();
+    return tag;
+  }
+
+  async getAllTags(): Promise<Tag[]> {
+    return await db.select().from(tags).orderBy(tags.name);
+  }
+
+  // Song tag operations
+  async addTagToSong(songTagData: InsertSongTag): Promise<SongTag> {
+    const [songTag] = await db.insert(songTags).values(songTagData).returning();
+    return songTag;
+  }
+
+  async removeTagFromSong(songId: string, tagId: string): Promise<void> {
+    await db
+      .delete(songTags)
+      .where(and(eq(songTags.songId, songId), eq(songTags.tagId, tagId)));
+  }
+
+  async getSongTags(songId: string): Promise<SongTag[]> {
+    return await db.select().from(songTags).where(eq(songTags.songId, songId));
+  }
+
+  // Song of the day operations
+  async getTodaysSongForUser(userId: string): Promise<SongOfTheDay | undefined> {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    const [sotd] = await db
+      .select()
+      .from(songOfTheDay)
+      .where(
+        and(
+          eq(songOfTheDay.userId, userId),
+          sql`DATE(${songOfTheDay.assignedDate}) = DATE(${today})`
+        )
+      );
+    return sotd;
+  }
+
+  async createSongOfTheDay(sotdData: InsertSongOfTheDay): Promise<SongOfTheDay> {
+    const [sotd] = await db.insert(songOfTheDay).values(sotdData).returning();
+    return sotd;
+  }
 }
 
-export const storage = new MemStorage();
+export const storage = new DatabaseStorage();
