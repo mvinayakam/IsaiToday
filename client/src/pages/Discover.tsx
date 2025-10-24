@@ -1,12 +1,13 @@
 import DiscoverGrid from "@/components/DiscoverGrid";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
-import type { Song, Tag } from "@shared/schema";
+import type { Song, Tag, SongStory } from "@shared/schema";
 import { Skeleton } from "@/components/ui/skeleton";
 
 interface TrendingSong {
   song: Song;
   reactionCount: number;
+  story: SongStory | null;
 }
 
 export default function Discover() {
@@ -22,6 +23,7 @@ export default function Discover() {
 
   const songs = trendingData.map((item) => ({
     song: item.song,
+    story: item.story,
     tags: [],
     likes: item.reactionCount,
     plays: 0,

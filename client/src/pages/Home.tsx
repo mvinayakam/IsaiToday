@@ -5,7 +5,7 @@ import AddSongDialog from "@/components/AddSongDialog";
 import CreatePlaylistDialog from "@/components/CreatePlaylistDialog";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
-import type { Song, Playlist, Reaction, User } from "@shared/schema";
+import type { Song, Playlist, Reaction, User, SongStory } from "@shared/schema";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { getLoginUrl } from "@/hooks/use-auth";
@@ -16,11 +16,13 @@ interface FeedItem {
   reaction: Reaction;
   song: Song;
   user: User;
+  story: SongStory | null;
 }
 
 interface TrendingSong {
   song: Song;
   reactionCount: number;
+  story: SongStory | null;
 }
 
 function LoadingSkeleton() {
@@ -105,6 +107,7 @@ export default function Home() {
 
   const feedSongs = feedData.map((item) => ({
     song: item.song,
+    story: item.story,
     tags: [],
     likes: 0,
     plays: 0,
@@ -112,6 +115,7 @@ export default function Home() {
 
   const trendingSongs = trendingData.map((item) => ({
     song: item.song,
+    story: item.story,
     tags: [],
     likes: item.reactionCount,
     plays: 0,

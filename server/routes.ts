@@ -2,7 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
-import { insertSongSchema, insertSongStorySchema, insertReactionSchema, insertPlaylistSchema, insertPlaylistSongSchema, insertTagSchema, insertAlbumSchema, insertLanguageSchema, insertArtistSchema, songs, reactions, users, type InsertSong } from "@shared/schema";
+import { insertSongSchema, insertSongStorySchema, insertReactionSchema, insertPlaylistSchema, insertPlaylistSongSchema, insertTagSchema, insertAlbumSchema, insertLanguageSchema, insertArtistSchema, songs, songStories, reactions, users, type InsertSong } from "@shared/schema";
 import { seedDatabase } from "./seed";
 import { db } from "./db";
 import { eq, desc, sql } from "drizzle-orm";
@@ -628,10 +628,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
           reaction: reactions,
           song: songs,
           user: users,
+          story: songStories,
         })
         .from(reactions)
         .innerJoin(songs, eq(reactions.songId, songs.id))
         .innerJoin(users, eq(reactions.userId, users.id))
+        .leftJoin(songStories, and(
+          eq(songStories.songId, songs.id),
+          eq(songStories.userId, users.id)
+        ))
         .orderBy(desc(reactions.createdAt))
         .limit(20);
       
@@ -645,6 +650,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Discover/trending route - shows songs with most reactions
   app.get('/api/discover', async (req, res) => {
     try {
+      // First get trending songs with reaction counts
       const trendingSongs = await db
         .select({
           song: songs,
@@ -656,7 +662,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
         .orderBy(desc(sql`count(${reactions.id})`))
         .limit(50);
       
-      res.json(trendingSongs);
+      // For each song, get one story (the first one)
+      const songsWithStories = await Promise.all(
+        trendingSongs.map(async (item) => {
+          const story = await db
+            .select()
+            .from(songStories)
+            .where(eq(songStories.songId, item.song.id))
+            .limit(1);
+          
+          return {
+            ...item,
+            story: story[0] || null
+          };
+        })
+      );
+      
+      res.json(songsWithStories);
     } catch (error) {
       console.error("Error fetching trending songs:", error);
       res.status(500).json({ message: "Failed to fetch trending songs" });
