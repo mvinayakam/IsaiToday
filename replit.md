@@ -12,6 +12,18 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes (October 24, 2025)
 
+### Latest Update: Enhanced Song Posting with Rich Metadata
+- **Album Field**: Users can add album names with autocomplete suggestions from existing albums
+- **Language Field**: Users can specify song language with autocomplete suggestions
+- **Multi-Artist Support**: Users can add multiple artists to a song using chip-based multi-select UI
+- **Tags System**: Users can add multiple tags to songs for better categorization
+- **Auto-creation**: Album, language, artist, and tag entries are automatically created if they don't exist
+- **Database Schema**: Added `albums`, `languages`, `artists` tables with `songArtists` and `songTags` junction tables
+- **Autocomplete APIs**: `/api/albums/search`, `/api/languages/search`, `/api/artists/search` endpoints
+- **Validation**: Added proper validation and duplicate-handling for all linking operations
+- **End-to-End Tested**: All features tested with Playwright and architect-approved
+
+### Previous Updates
 - Implemented complete backend API with PostgreSQL database and Drizzle ORM
 - Integrated Replit Auth for Google and email login
 - Connected all frontend pages to backend APIs
@@ -63,9 +75,16 @@ Preferred communication style: Simple, everyday language.
   - `/api/song-of-day` - Daily song recommendation
   - `/api/feed` - Friend activity feed
   - `/api/discover` - Trending songs
-  - `/api/songs` - Song CRUD operations
+  - `/api/songs` - Song CRUD operations with album/language support
+  - `/api/songs/:songId/artists` - Link artists to songs
+  - `/api/songs/:songId/tags` - Link tags to songs
   - `/api/playlists` - Playlist management
   - `/api/reactions` - Like/reaction tracking
+  - `/api/albums/search` - Autocomplete for album names
+  - `/api/languages/search` - Autocomplete for languages
+  - `/api/artists/search` - Autocomplete for artist names
+  - `/api/artists` - Create or retrieve artists
+  - `/api/tags` - Tag management
 
 **Authentication & Sessions**
 - Replit Auth using OpenID Connect (OIDC) for user authentication
@@ -87,7 +106,11 @@ Preferred communication style: Simple, everyday language.
 
 **Schema Design**
 - `users` - User profiles with OAuth data (id, email, firstName, lastName, profileImageUrl)
-- `songs` - Song metadata (id, youtubeId, title, artist, thumbnail, addedBy, createdAt)
+- `songs` - Song metadata (id, youtubeId, title, artist, album, language, thumbnail, addedBy, createdAt)
+- `albums` - Album names for autocomplete and organization
+- `languages` - Language names for autocomplete and filtering
+- `artists` - Artist names for multi-artist support
+- `songArtists` - Many-to-many join table linking songs to multiple artists
 - `songStories` - User stories/descriptions for songs (many-to-many user-song relationship)
 - `reactions` - User likes/reactions to songs (type field for future reaction types)
 - `playlists` - User-created playlists
