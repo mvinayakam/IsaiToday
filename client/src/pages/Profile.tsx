@@ -1,6 +1,7 @@
 import ProfileSection from "@/components/ProfileSection";
 import FeedCarousel from "@/components/FeedCarousel";
 import PlaylistCard from "@/components/PlaylistCard";
+import CreatePlaylistDialog from "@/components/CreatePlaylistDialog";
 import { useAuth, getLogoutUrl } from "@/hooks/use-auth";
 import { useQuery } from "@tanstack/react-query";
 import type { Reaction, Song, Playlist } from "@shared/schema";
@@ -51,9 +52,9 @@ export default function Profile() {
     <div className="min-h-screen pt-16 md:pt-20">
       <div className="py-12">
         <ProfileSection
-          avatar={user.profileImageUrl || undefined}
+          avatar={user.profileImageUrl ?? undefined}
           name={name}
-          email={user.email}
+          email={user.email ?? ""}
           tags={[]}
           stats={{
             songsLiked: reactionsWithSongs.length,
@@ -84,7 +85,10 @@ export default function Profile() {
 
       <section className="py-8 md:py-12">
         <div className="max-w-7xl mx-auto px-4 md:px-6">
-          <h2 className="text-2xl md:text-3xl font-semibold mb-6">My Playlists</h2>
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-2xl md:text-3xl font-semibold">My Playlists</h2>
+            <CreatePlaylistDialog />
+          </div>
           {playlistsLoading ? (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
               {[1, 2, 3, 4].map((i) => (

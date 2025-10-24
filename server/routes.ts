@@ -178,6 +178,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/playlists', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
+      
+      // Check if there are at least 50 songs in the database
+      const allSongs = await storage.getAllSongs();
+      if (allSongs.length < 50) {
+        return res.status(403).json({ 
+          message: "Playlist creation requires at least 50 songs in the database",
+          songCount: allSongs.length,
+          required: 50
+        });
+      }
+      
       const validatedData = insertPlaylistSchema.parse({
         userId,
         title: req.body.title,

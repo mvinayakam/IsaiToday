@@ -1,6 +1,8 @@
 import SongOfTheDay from "@/components/SongOfTheDay";
 import FeedCarousel from "@/components/FeedCarousel";
 import PlaylistCard from "@/components/PlaylistCard";
+import AddSongDialog from "@/components/AddSongDialog";
+import CreatePlaylistDialog from "@/components/CreatePlaylistDialog";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
 import type { Song, Playlist, Reaction, User } from "@shared/schema";
@@ -63,10 +65,7 @@ export default function Home() {
     }
 
     try {
-      await apiRequest(`/api/songs/${songId}/reactions`, {
-        method: 'POST',
-        body: JSON.stringify({ type: 'like' }),
-      });
+      await apiRequest('POST', `/api/songs/${songId}/reactions`, { type: 'like' });
       toast({
         title: "Success",
         description: "Song liked!",
@@ -142,6 +141,16 @@ export default function Home() {
         />
       )}
 
+      <div className="max-w-7xl mx-auto px-4 md:px-6 py-8">
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-2xl md:text-3xl font-semibold">Share Your Music</h2>
+          <AddSongDialog />
+        </div>
+        <p className="text-muted-foreground mb-8">
+          Add a song you love and tell everyone why it matters to you
+        </p>
+      </div>
+
       <FeedCarousel
         title="Your Feed"
         songs={feedSongs}
@@ -163,7 +172,10 @@ export default function Home() {
       {isAuthenticated && (
         <section className="py-8 md:py-12">
           <div className="max-w-7xl mx-auto px-4 md:px-6">
-            <h2 className="text-2xl md:text-3xl font-semibold mb-6">Your Playlists</h2>
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl md:text-3xl font-semibold">Your Playlists</h2>
+              <CreatePlaylistDialog />
+            </div>
             {playlistsLoading ? (
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
                 {[1, 2, 3, 4].map((i) => (
