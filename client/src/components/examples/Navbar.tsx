@@ -5,7 +5,7 @@ export default function NavbarExample() {
   return (
     <Navbar 
       userAvatar={avatar}
-      userName="Sarah Chen"
+      userName="Priya Reddy"
       onMenuClick={() => console.log('Menu clicked')}
       onSearchChange={(value) => console.log('Search:', value)}
       onProfileClick={() => console.log('Profile clicked')}

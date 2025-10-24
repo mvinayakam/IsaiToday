@@ -3,10 +3,10 @@ import SongOfTheDay from '../SongOfTheDay';
 export default function SongOfTheDayExample() {
   return (
     <SongOfTheDay
-      youtubeId="kJQP7kiw5Fk"
-      title="Despacito"
-      artist="Luis Fonsi ft. Daddy Yankee"
-      tags={["latin", "reggaeton", "summer", "dance"]}
+      youtubeId="YR12Z8f1Dh8"
+      title="Mere Sapno Ki Rani"
+      artist="Kishore Kumar"
+      tags={["classic", "romantic", "kishore", "retro", "bollywood"]}
       likes={3421}
       onLike={() => console.log('Liked SOTD')}
       onAddToPlaylist={() => console.log('Add to playlist clicked')}

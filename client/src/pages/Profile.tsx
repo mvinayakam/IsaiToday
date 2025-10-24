@@ -4,15 +4,15 @@ import PlaylistCard from "@/components/PlaylistCard";
 import avatar from '@assets/generated_images/Male_user_profile_avatar_e9b4c3bb.png';
 
 const mockLikedSongs = [
-  { youtubeId: "9bZkp7q19f0", title: "Gangnam Style", artist: "PSY", tags: ["kpop", "dance"], likes: 892, plays: 9821, isLiked: true },
-  { youtubeId: "60ItHLz5WEA", title: "Faded", artist: "Alan Walker", tags: ["edm"], likes: 2134, plays: 23456, isLiked: true },
-  { youtubeId: "SlPhMPnQ58k", title: "Closer", artist: "The Chainsmokers", tags: ["edm", "pop"], likes: 1456, plays: 16789, isLiked: true },
+  { youtubeId: "YR12Z8f1Dh8", title: "Mere Sapno Ki Rani", artist: "Kishore Kumar", tags: ["classic", "romantic", "kishore"], likes: 892, plays: 9821, isLiked: true },
+  { youtubeId: "3Tqjf6teI-Q", title: "Roja Janeman", artist: "A R Rahman, S P Balasubrahmanyam", tags: ["ar-rahman", "tamil"], likes: 2134, plays: 23456, isLiked: true },
+  { youtubeId: "6ste3pOXLto", title: "Kanne Kalaimaane", artist: "Ilaiyaraja", tags: ["ilaiyaraja", "tamil", "melody"], likes: 1456, plays: 16789, isLiked: true },
 ];
 
 const mockPlaylists = [
-  { id: "1", title: "Chill Vibes", songCount: 24 },
-  { id: "2", title: "Workout Motivation", songCount: 18 },
-  { id: "3", title: "Road Trip Favorites", songCount: 42 },
+  { id: "1", title: "Classic Kishore Hits", songCount: 24 },
+  { id: "2", title: "A R Rahman Magic", songCount: 18 },
+  { id: "3", title: "Ilaiyaraja Melodies", songCount: 42 },
 ];
 
 export default function Profile() {
@@ -21,9 +21,9 @@ export default function Profile() {
       <div className="py-12">
         <ProfileSection
           avatar={avatar}
-          name="Alex Johnson"
-          email="alex.johnson@example.com"
-          tags={["pop", "rock", "indie", "electronic"]}
+          name="Arjun Sharma"
+          email="arjun.sharma@example.com"
+          tags={["classic", "romantic", "bollywood", "tamil", "melody"]}
           stats={{
             songsLiked: 342,
             playlists: 12,

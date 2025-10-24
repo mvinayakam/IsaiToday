@@ -5,9 +5,9 @@ export default function ProfileSectionExample() {
   return (
     <ProfileSection
       avatar={avatar}
-      name="Alex Johnson"
-      email="alex.johnson@example.com"
-      tags={["pop", "rock", "indie", "electronic"]}
+      name="Arjun Sharma"
+      email="arjun.sharma@example.com"
+      tags={["classic", "romantic", "bollywood", "tamil", "melody"]}
       stats={{
         songsLiked: 342,
         playlists: 12,

@@ -1,21 +1,21 @@
 import DiscoverGrid from "@/components/DiscoverGrid";
 
 const mockSongs = [
-  { youtubeId: "dQw4w9WgXcQ", title: "Never Gonna Give You Up", artist: "Rick Astley", tags: ["80s", "pop", "classic"], likes: 1247, plays: 15430 },
-  { youtubeId: "9bZkp7q19f0", title: "Gangnam Style", artist: "PSY", tags: ["kpop", "dance"], likes: 892, plays: 9821 },
-  { youtubeId: "kJQP7kiw5Fk", title: "Despacito", artist: "Luis Fonsi", tags: ["latin", "reggaeton", "summer"], likes: 2341, plays: 28934 },
-  { youtubeId: "OPf0YbXqDm0", title: "Uptown Funk", artist: "Mark Ronson", tags: ["funk", "pop", "dance"], likes: 1678, plays: 19283 },
-  { youtubeId: "RgKAFK5djSk", title: "See You Again", artist: "Wiz Khalifa", tags: ["hip-hop", "emotional"], likes: 987, plays: 12456 },
-  { youtubeId: "CevxZvSJLk8", title: "Shape of You", artist: "Ed Sheeran", tags: ["pop", "dance"], likes: 1543, plays: 17892 },
-  { youtubeId: "60ItHLz5WEA", title: "Faded", artist: "Alan Walker", tags: ["edm", "electronic"], likes: 2134, plays: 23456, isLiked: true },
-  { youtubeId: "FM7MFYoylVs", title: "Thinking Out Loud", artist: "Ed Sheeran", tags: ["pop", "romantic"], likes: 892, plays: 11234 },
-  { youtubeId: "SlPhMPnQ58k", title: "Closer", artist: "The Chainsmokers", tags: ["edm", "pop"], likes: 1456, plays: 16789 },
-  { youtubeId: "hT_nvWreIhg", title: "Counting Stars", artist: "OneRepublic", tags: ["pop", "indie"], likes: 1234, plays: 14567 },
-  { youtubeId: "ru0K8uYEZWw", title: "Clarity", artist: "Zedd", tags: ["edm", "electronic"], likes: 1789, plays: 18923 },
-  { youtubeId: "e-ORhEE3VVg", title: "Titanium", artist: "David Guetta", tags: ["edm", "dance"], likes: 2045, plays: 21456 },
+  { youtubeId: "YR12Z8f1Dh8", title: "Mere Sapno Ki Rani", artist: "Kishore Kumar", tags: ["classic", "romantic", "kishore"], likes: 1247, plays: 15430 },
+  { youtubeId: "CDNJbIeKFGQ", title: "Piya Tu Ab To Aaja", artist: "R D Burman, Asha Bhonsle", tags: ["rd-burman", "classic", "retro"], likes: 892, plays: 9821 },
+  { youtubeId: "3Tqjf6teI-Q", title: "Roja Janeman", artist: "A R Rahman, S P Balasubrahmanyam", tags: ["ar-rahman", "tamil", "melody"], likes: 2341, plays: 28934 },
+  { youtubeId: "s4bJ0arbnd8", title: "Nenjukkule", artist: "A R Rahman", tags: ["ar-rahman", "tamil", "romantic"], likes: 1678, plays: 19283 },
+  { youtubeId: "YZBW7OWbO5Y", title: "Sundari Kannal", artist: "Ilaiyaraja, S P Balasubrahmanyam", tags: ["ilaiyaraja", "tamil", "classic"], likes: 987, plays: 12456 },
+  { youtubeId: "kw4tT7SCmaY", title: "Dum Maro Dum", artist: "R D Burman, Asha Bhonsle", tags: ["rd-burman", "classic", "bollywood"], likes: 1543, plays: 17892 },
+  { youtubeId: "6ste3pOXLto", title: "Kanne Kalaimaane", artist: "Ilaiyaraja", tags: ["ilaiyaraja", "tamil", "melody"], likes: 2134, plays: 23456, isLiked: true },
+  { youtubeId: "aWu8g1yHABg", title: "Pal Pal Dil Ke Paas", artist: "Kishore Kumar, S D Burman", tags: ["classic", "romantic", "kishore"], likes: 892, plays: 11234 },
+  { youtubeId: "HQ5mJNk8k7M", title: "Kaatril Varum Geetham", artist: "Ilaiyaraja, S P Balasubrahmanyam", tags: ["ilaiyaraja", "tamil", "melody"], likes: 1456, plays: 16789 },
+  { youtubeId: "PQmrmVs10X8", title: "O Haseena Zulfon Wali", artist: "Kishore Kumar, R D Burman", tags: ["kishore", "rd-burman", "classic"], likes: 1234, plays: 14567 },
+  { youtubeId: "K7sJqXUTups", title: "Kehna Hi Kya", artist: "A R Rahman", tags: ["ar-rahman", "romantic", "bollywood"], likes: 1789, plays: 18923 },
+  { youtubeId: "5eTCZ9L834s", title: "Ye Jo Des Hai Tera", artist: "A R Rahman", tags: ["ar-rahman", "patriotic", "bollywood"], likes: 2045, plays: 21456 },
 ];
 
-const tags = ["pop", "dance", "80s", "kpop", "latin", "funk", "hip-hop", "edm", "electronic", "romantic", "summer"];
+const tags = ["classic", "romantic", "bollywood", "tamil", "kishore", "rd-burman", "ar-rahman", "ilaiyaraja", "melody", "retro", "patriotic"];
 
 export default function Discover() {
   return (
