@@ -8,6 +8,8 @@ interface Song {
   youtubeId: string;
   title: string;
   artist: string;
+  story?: string;
+  sharedBy?: string;
   tags?: string[];
   likes?: number;
   plays?: number;

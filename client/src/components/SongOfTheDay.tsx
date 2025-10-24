@@ -7,6 +7,7 @@ interface SongOfTheDayProps {
   youtubeId: string;
   title: string;
   artist: string;
+  story?: string;
   tags?: string[];
   likes?: number;
   isLiked?: boolean;
@@ -19,6 +20,7 @@ export default function SongOfTheDay({
   youtubeId,
   title,
   artist,
+  story,
   tags = [],
   likes = 0,
   isLiked = false,
@@ -46,7 +48,16 @@ export default function SongOfTheDay({
         <h1 className="text-4xl md:text-5xl font-bold tracking-tight mb-2" data-testid="text-sotd-title">
           {title}
         </h1>
-        <p className="text-xl text-muted-foreground" data-testid="text-sotd-artist">{artist}</p>
+        <p className="text-xl text-muted-foreground mb-4" data-testid="text-sotd-artist">{artist}</p>
+        
+        {story && (
+          <div className="max-w-2xl mx-auto">
+            <p className="text-sm font-medium text-muted-foreground mb-2">Why I love this song</p>
+            <p className="text-lg leading-relaxed" data-testid="text-sotd-story">
+              "{story}"
+            </p>
+          </div>
+        )}
       </div>
 
       <div className="backdrop-blur-md bg-card/50 border border-white/10 rounded-2xl p-6 md:p-12 shadow-xl">

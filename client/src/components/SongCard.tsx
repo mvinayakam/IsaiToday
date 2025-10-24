@@ -7,6 +7,8 @@ interface SongCardProps {
   youtubeId: string;
   title: string;
   artist: string;
+  story?: string;
+  sharedBy?: string;
   tags?: string[];
   likes?: number;
   plays?: number;
@@ -20,6 +22,8 @@ export default function SongCard({
   youtubeId,
   title,
   artist,
+  story,
+  sharedBy,
   tags = [],
   likes = 0,
   plays = 0,
@@ -65,6 +69,11 @@ export default function SongCard({
 
       <div className="p-4 space-y-3">
         <div>
+          {sharedBy && (
+            <p className="text-xs text-muted-foreground mb-1">
+              Shared by {sharedBy}
+            </p>
+          )}
           <h3 className="font-semibold text-base line-clamp-2 mb-1" data-testid={`text-title-${youtubeId}`}>
             {title}
           </h3>
@@ -72,6 +81,14 @@ export default function SongCard({
             {artist}
           </p>
         </div>
+
+        {story && (
+          <div className="pt-2 border-t border-white/5">
+            <p className="text-sm italic text-muted-foreground line-clamp-2" data-testid={`text-story-${youtubeId}`}>
+              "{story}"
+            </p>
+          </div>
+        )}
 
         {tags.length > 0 && (
           <div className="flex flex-wrap gap-1">
