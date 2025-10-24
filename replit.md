@@ -12,7 +12,19 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes (October 24, 2025)
 
-### Latest Update: UI/UX Improvements - Edit Visibility, Modal Fixes & Profile Navigation ✅
+### Latest Update: Enhanced Song Sharing Accessibility & My Posts/My Likes Pages ✅
+- **Visible Navbar "Add Song" Button**: Added prominent "Add Song" button in navbar (always visible when logged in) for easy song submission
+- **Floating Action Button (FAB)**: Added persistent floating action button in bottom-right corner on all pages for quick song sharing access
+- **My Posts Page**: Created dedicated `/my-posts` page showing user's posted songs with built-in edit functionality
+- **My Likes Page**: Created dedicated `/my-likes` page displaying all songs the user has liked
+- **Profile Menu Navigation**: Updated profile dropdown to include "My Posts" and "My Likes" menu items for easy access to these new pages
+- **API Endpoints**: Added `/api/users/:userId/songs` to fetch user's posted songs with reaction counts
+- **AddSongDialog Enhancement**: Updated to support external state control via open/onOpenChange props for programmatic dialog control
+- **Bold Login Heading**: Made home page login screen heading more prominent and engaging
+- **End-to-End Tested**: All features verified working including navbar button, FAB, page navigation, and dialog opening
+- **Architect Approved**: All changes reviewed and approved
+
+### Previous Update: UI/UX Improvements - Edit Visibility, Modal Fixes & Profile Navigation ✅
 - **Edit Button Visibility**: Made edit button always visible on song cards (no longer requires hover) for better discoverability
 - **Modal Close Button Fix**: Removed duplicate close button from YouTube player modal (now uses single built-in Radix UI close button)
 - **Profile Menu Enhancement**: Added "My Posts" and "My Likes" navigation items to profile dropdown menu for easier access
@@ -90,6 +102,8 @@ Preferred communication style: Simple, everyday language.
 **Key Pages**
 - Home: Song of the Day feature with friend activity feed and trending songs
 - Discover: Grid-based exploration with tag filtering
+- My Posts: Dedicated page showing user's posted songs with edit capability
+- My Likes: Dedicated page displaying all songs the user has liked
 - Profile: User stats, liked songs, and playlist management
 - Auth: Login/registration (currently OAuth-based via Replit)
 
@@ -112,11 +126,15 @@ Preferred communication style: Simple, everyday language.
   - `/api/songs/:songId/tags` - Link tags to songs
   - `/api/playlists` - Playlist management
   - `/api/reactions` - Like/reaction tracking
+  - `/api/users/:userId` - Fetch user profiles
+  - `/api/users/:userId/songs` - Fetch user's posted songs with reaction counts
+  - `/api/users/:userId/reactions` - Fetch user's liked songs
   - `/api/albums/search` - Autocomplete for album names
   - `/api/languages/search` - Autocomplete for languages
   - `/api/artists/search` - Autocomplete for artist names
   - `/api/artists` - Create or retrieve artists
   - `/api/tags` - Tag management
+  - `/api/tags/cloud` - Tag usage aggregation for tag cloud
 
 **Authentication & Sessions**
 - Replit Auth using OpenID Connect (OIDC) for user authentication
