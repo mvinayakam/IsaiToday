@@ -51,6 +51,7 @@ export interface IStorage {
   getSong(id: string): Promise<Song | undefined>;
   getSongByYoutubeId(youtubeId: string): Promise<Song | undefined>;
   createSong(song: InsertSong): Promise<Song>;
+  updateSong(id: string, updates: Partial<InsertSong>): Promise<Song>;
   getAllSongs(): Promise<Song[]>;
   
   // Song story operations
@@ -152,6 +153,15 @@ export class DatabaseStorage implements IStorage {
 
   async createSong(songData: InsertSong): Promise<Song> {
     const [song] = await db.insert(songs).values(songData).returning();
+    return song;
+  }
+
+  async updateSong(id: string, updates: Partial<InsertSong>): Promise<Song> {
+    const [song] = await db
+      .update(songs)
+      .set(updates)
+      .where(eq(songs.id, id))
+      .returning();
     return song;
   }
 

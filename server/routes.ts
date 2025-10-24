@@ -2,7 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
-import { insertSongSchema, insertSongStorySchema, insertReactionSchema, insertPlaylistSchema, insertPlaylistSongSchema, insertTagSchema, insertAlbumSchema, insertLanguageSchema, insertArtistSchema, songs, reactions, users } from "@shared/schema";
+import { insertSongSchema, insertSongStorySchema, insertReactionSchema, insertPlaylistSchema, insertPlaylistSongSchema, insertTagSchema, insertAlbumSchema, insertLanguageSchema, insertArtistSchema, songs, reactions, users, type InsertSong } from "@shared/schema";
 import { seedDatabase } from "./seed";
 import { db } from "./db";
 import { eq, desc, sql } from "drizzle-orm";
@@ -91,6 +91,53 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.put('/api/songs/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const song = await storage.getSong(req.params.id);
+      
+      if (!song) {
+        return res.status(404).json({ message: "Song not found" });
+      }
+      
+      // Only allow the user who added the song to edit it
+      if (song.addedBy !== userId) {
+        return res.status(403).json({ message: "You can only edit songs you added" });
+      }
+      
+      // Create album if provided and doesn't exist
+      if (req.body.album && typeof req.body.album === 'string' && req.body.album.trim()) {
+        const albumName = req.body.album.trim();
+        const existingAlbum = await storage.getAlbumByName(albumName);
+        if (!existingAlbum) {
+          await storage.createAlbum({ name: albumName });
+        }
+      }
+      
+      // Create language if provided and doesn't exist
+      if (req.body.language && typeof req.body.language === 'string' && req.body.language.trim()) {
+        const languageName = req.body.language.trim();
+        const existingLanguage = await storage.getLanguageByName(languageName);
+        if (!existingLanguage) {
+          await storage.createLanguage({ name: languageName });
+        }
+      }
+      
+      const updates: Partial<InsertSong> = {};
+      if (req.body.title) updates.title = req.body.title;
+      if (req.body.artist) updates.artist = req.body.artist;
+      if (req.body.album !== undefined) updates.album = req.body.album || null;
+      if (req.body.language !== undefined) updates.language = req.body.language || null;
+      if (req.body.thumbnail) updates.thumbnail = req.body.thumbnail;
+      
+      const updatedSong = await storage.updateSong(req.params.id, updates);
+      res.json(updatedSong);
+    } catch (error) {
+      console.error("Error updating song:", error);
+      res.status(500).json({ message: "Failed to update song" });
+    }
+  });
+
   // Song story routes
   app.get('/api/songs/:songId/stories', async (req, res) => {
     try {
@@ -116,6 +163,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error creating song story:", error);
       res.status(500).json({ message: "Failed to create story" });
+    }
+  });
+
+  app.put('/api/songs/:songId/stories/:storyId', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      
+      // Get the story to verify ownership
+      const existingStory = await storage.getSongStory(req.params.songId, userId);
+      if (!existingStory || existingStory.id !== req.params.storyId) {
+        return res.status(404).json({ message: "Story not found or you don't have permission to edit it" });
+      }
+      
+      const updatedStory = await storage.updateSongStory(req.params.storyId, req.body.story);
+      res.json(updatedStory);
+    } catch (error) {
+      console.error("Error updating story:", error);
+      res.status(500).json({ message: "Failed to update story" });
     }
   });
 
@@ -276,6 +341,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get artists for a song
+  app.get('/api/songs/:songId/artists', async (req, res) => {
+    try {
+      const artists = await storage.getSongArtists(req.params.songId);
+      res.json(artists);
+    } catch (error) {
+      console.error("Error fetching song artists:", error);
+      res.status(500).json({ message: "Failed to fetch artists" });
+    }
+  });
+
   // Link artist to song
   app.post('/api/songs/:songId/artists', isAuthenticated, async (req, res) => {
     try {
@@ -304,6 +380,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Remove artist from song
+  app.delete('/api/songs/:songId/artists/:artistId', isAuthenticated, async (req, res) => {
+    try {
+      await storage.removeArtistFromSong(req.params.songId, req.params.artistId);
+      res.json({ message: "Artist removed from song" });
+    } catch (error) {
+      console.error("Error removing artist from song:", error);
+      res.status(500).json({ message: "Failed to remove artist from song" });
+    }
+  });
+
+  // Get tags for a song
+  app.get('/api/songs/:songId/tags', async (req, res) => {
+    try {
+      const songTags = await storage.getSongTags(req.params.songId);
+      // Get the full tag objects
+      const tags = await Promise.all(
+        songTags.map(async (st) => {
+          const tag = await storage.getTag(st.tagId);
+          return tag;
+        })
+      );
+      res.json(tags.filter(Boolean));
+    } catch (error) {
+      console.error("Error fetching song tags:", error);
+      res.status(500).json({ message: "Failed to fetch tags" });
+    }
+  });
+
   // Link tag to song
   app.post('/api/songs/:songId/tags', isAuthenticated, async (req, res) => {
     try {
@@ -329,6 +434,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       console.error("Error linking tag to song:", error);
       res.status(500).json({ message: "Failed to link tag to song" });
+    }
+  });
+
+  // Remove tag from song
+  app.delete('/api/songs/:songId/tags/:tagId', isAuthenticated, async (req, res) => {
+    try {
+      await storage.removeTagFromSong(req.params.songId, req.params.tagId);
+      res.json({ message: "Tag removed from song" });
+    } catch (error) {
+      console.error("Error removing tag from song:", error);
+      res.status(500).json({ message: "Failed to remove tag from song" });
     }
   });
 
