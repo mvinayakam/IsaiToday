@@ -90,14 +90,14 @@ export default function Home() {
         <div className="max-w-md mx-auto px-4 text-center">
           <h1 className="text-4xl font-bold mb-4">Welcome to IsaiToday</h1>
           <p className="text-lg text-muted-foreground mb-8">
-            Discover and share the stories behind your favorite Indian songs
+            Discover and share the stories behind your favorite songs
           </p>
           <Button
             size="lg"
             onClick={() => window.location.href = getLoginUrl()}
             data-testid="button-login"
           >
-            Login with Replit
+            Login with Google
           </Button>
         </div>
       </div>

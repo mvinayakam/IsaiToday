@@ -2,7 +2,7 @@
 
 ## Overview
 
-IsaiToday is a full-stack social discovery platform for sharing and exploring songs, with a focus on Indian music. Users receive a daily song recommendation, can create playlists, react to songs, and discover trending music through a feed-based interface. The platform features YouTube integration for song playback and metadata, with a sophisticated dark-mode design inspired by Spotify and Notion aesthetics.
+IsaiToday is a full-stack social discovery platform for sharing and exploring songs from around the world, with a strong Indian music presence. Users receive a daily song recommendation, can create playlists, react to songs, and discover trending music through a feed-based interface. The platform features YouTube integration for song playback and metadata, with a sophisticated dark-mode design inspired by Spotify and Notion aesthetics.
 
 **Status:** ✅ Fully functional with authenticated user flows, database integration, and end-to-end tested
 

@@ -53,7 +53,7 @@ export default function Discover() {
       <div className="py-8">
         <div className="max-w-7xl mx-auto px-4 md:px-6 mb-8">
           <h1 className="text-4xl md:text-5xl font-bold tracking-tight mb-2">Discover</h1>
-          <p className="text-lg text-muted-foreground">Explore trending songs from around the world</p>
+          <p className="text-lg text-muted-foreground">Explore trending songs and discover new favorites</p>
         </div>
         
         {songs.length > 0 ? (
