@@ -2,7 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
-import { insertSongSchema, insertSongStorySchema, insertReactionSchema, insertPlaylistSchema, insertPlaylistSongSchema, insertTagSchema, songs, reactions, users } from "@shared/schema";
+import { insertSongSchema, insertSongStorySchema, insertReactionSchema, insertPlaylistSchema, insertPlaylistSongSchema, insertTagSchema, insertAlbumSchema, insertLanguageSchema, insertArtistSchema, songs, reactions, users } from "@shared/schema";
 import { seedDatabase } from "./seed";
 import { db } from "./db";
 import { eq, desc, sql } from "drizzle-orm";
@@ -53,6 +53,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/songs', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
+      
+      // Create album if provided and doesn't exist
+      if (req.body.album && typeof req.body.album === 'string' && req.body.album.trim()) {
+        const albumName = req.body.album.trim();
+        const existingAlbum = await storage.getAlbumByName(albumName);
+        if (!existingAlbum) {
+          await storage.createAlbum({ name: albumName });
+        }
+      }
+      
+      // Create language if provided and doesn't exist
+      if (req.body.language && typeof req.body.language === 'string' && req.body.language.trim()) {
+        const languageName = req.body.language.trim();
+        const existingLanguage = await storage.getLanguageByName(languageName);
+        if (!existingLanguage) {
+          await storage.createLanguage({ name: languageName });
+        }
+      }
+      
       const validatedData = insertSongSchema.parse({
         ...req.body,
         addedBy: userId,
@@ -254,6 +273,152 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error creating tag:", error);
       res.status(500).json({ message: "Failed to create tag" });
+    }
+  });
+
+  // Link artist to song
+  app.post('/api/songs/:songId/artists', isAuthenticated, async (req, res) => {
+    try {
+      if (!req.body.artistId || typeof req.body.artistId !== 'string') {
+        return res.status(400).json({ message: "Invalid artistId" });
+      }
+      
+      // Verify song exists
+      const song = await storage.getSong(req.params.songId);
+      if (!song) {
+        return res.status(404).json({ message: "Song not found" });
+      }
+      
+      await storage.addArtistToSong({
+        songId: req.params.songId,
+        artistId: req.body.artistId,
+      });
+      res.status(201).json({ message: "Artist linked to song" });
+    } catch (error: any) {
+      // Handle duplicate key errors gracefully
+      if (error.message?.includes('duplicate') || error.code === '23505') {
+        return res.json({ message: "Artist already linked to song" });
+      }
+      console.error("Error linking artist to song:", error);
+      res.status(500).json({ message: "Failed to link artist to song" });
+    }
+  });
+
+  // Link tag to song
+  app.post('/api/songs/:songId/tags', isAuthenticated, async (req, res) => {
+    try {
+      if (!req.body.tagId || typeof req.body.tagId !== 'string') {
+        return res.status(400).json({ message: "Invalid tagId" });
+      }
+      
+      // Verify song exists
+      const song = await storage.getSong(req.params.songId);
+      if (!song) {
+        return res.status(404).json({ message: "Song not found" });
+      }
+      
+      await storage.addTagToSong({
+        songId: req.params.songId,
+        tagId: req.body.tagId,
+      });
+      res.status(201).json({ message: "Tag linked to song" });
+    } catch (error: any) {
+      // Handle duplicate key errors gracefully
+      if (error.message?.includes('duplicate') || error.code === '23505') {
+        return res.json({ message: "Tag already linked to song" });
+      }
+      console.error("Error linking tag to song:", error);
+      res.status(500).json({ message: "Failed to link tag to song" });
+    }
+  });
+
+  // Album routes
+  app.get('/api/albums/search', async (req, res) => {
+    try {
+      const query = req.query.q as string;
+      if (!query || query.trim().length === 0) {
+        return res.json([]);
+      }
+      const albums = await storage.searchAlbums(query);
+      res.json(albums);
+    } catch (error) {
+      console.error("Error searching albums:", error);
+      res.status(500).json({ message: "Failed to search albums" });
+    }
+  });
+
+  app.post('/api/albums', isAuthenticated, async (req, res) => {
+    try {
+      const validatedData = insertAlbumSchema.parse({ name: req.body.name });
+      const existing = await storage.getAlbumByName(validatedData.name);
+      if (existing) {
+        return res.json(existing);
+      }
+      const album = await storage.createAlbum(validatedData);
+      res.status(201).json(album);
+    } catch (error) {
+      console.error("Error creating album:", error);
+      res.status(500).json({ message: "Failed to create album" });
+    }
+  });
+
+  // Language routes
+  app.get('/api/languages/search', async (req, res) => {
+    try {
+      const query = req.query.q as string;
+      if (!query || query.trim().length === 0) {
+        return res.json([]);
+      }
+      const languages = await storage.searchLanguages(query);
+      res.json(languages);
+    } catch (error) {
+      console.error("Error searching languages:", error);
+      res.status(500).json({ message: "Failed to search languages" });
+    }
+  });
+
+  app.post('/api/languages', isAuthenticated, async (req, res) => {
+    try {
+      const validatedData = insertLanguageSchema.parse({ name: req.body.name });
+      const existing = await storage.getLanguageByName(validatedData.name);
+      if (existing) {
+        return res.json(existing);
+      }
+      const language = await storage.createLanguage(validatedData);
+      res.status(201).json(language);
+    } catch (error) {
+      console.error("Error creating language:", error);
+      res.status(500).json({ message: "Failed to create language" });
+    }
+  });
+
+  // Artist routes
+  app.get('/api/artists/search', async (req, res) => {
+    try {
+      const query = req.query.q as string;
+      if (!query || query.trim().length === 0) {
+        return res.json([]);
+      }
+      const artists = await storage.searchArtists(query);
+      res.json(artists);
+    } catch (error) {
+      console.error("Error searching artists:", error);
+      res.status(500).json({ message: "Failed to search artists" });
+    }
+  });
+
+  app.post('/api/artists', isAuthenticated, async (req, res) => {
+    try {
+      const validatedData = insertArtistSchema.parse({ name: req.body.name });
+      const existing = await storage.getArtistByName(validatedData.name);
+      if (existing) {
+        return res.json(existing);
+      }
+      const artist = await storage.createArtist(validatedData);
+      res.status(201).json(artist);
+    } catch (error) {
+      console.error("Error creating artist:", error);
+      res.status(500).json({ message: "Failed to create artist" });
     }
   });
 

@@ -38,12 +38,56 @@ export const users = pgTable("users", {
 export type UpsertUser = typeof users.$inferInsert;
 export type User = typeof users.$inferSelect;
 
+// Albums table
+export const albums = pgTable("albums", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: varchar("name").notNull().unique(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertAlbumSchema = createInsertSchema(albums).omit({
+  id: true,
+  createdAt: true,
+});
+export type InsertAlbum = z.infer<typeof insertAlbumSchema>;
+export type Album = typeof albums.$inferSelect;
+
+// Languages table
+export const languages = pgTable("languages", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: varchar("name").notNull().unique(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertLanguageSchema = createInsertSchema(languages).omit({
+  id: true,
+  createdAt: true,
+});
+export type InsertLanguage = z.infer<typeof insertLanguageSchema>;
+export type Language = typeof languages.$inferSelect;
+
+// Artists table
+export const artists = pgTable("artists", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: varchar("name").notNull().unique(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertArtistSchema = createInsertSchema(artists).omit({
+  id: true,
+  createdAt: true,
+});
+export type InsertArtist = z.infer<typeof insertArtistSchema>;
+export type Artist = typeof artists.$inferSelect;
+
 // Songs table
 export const songs = pgTable("songs", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   youtubeId: varchar("youtube_id").notNull().unique(),
   title: varchar("title").notNull(),
-  artist: varchar("artist").notNull(),
+  artist: varchar("artist").notNull(), // Kept for backward compatibility
+  album: varchar("album"), // Album name - no validation, user can type anything
+  language: varchar("language"), // Language name - no validation, user can type anything
   thumbnail: varchar("thumbnail"),
   addedBy: varchar("added_by").references(() => users.id).notNull(),
   createdAt: timestamp("created_at").defaultNow(),
@@ -55,6 +99,21 @@ export const insertSongSchema = createInsertSchema(songs).omit({
 });
 export type InsertSong = z.infer<typeof insertSongSchema>;
 export type Song = typeof songs.$inferSelect;
+
+// Song artists table (many-to-many relationship)
+export const songArtists = pgTable("song_artists", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  songId: varchar("song_id").references(() => songs.id, { onDelete: "cascade" }).notNull(),
+  artistId: varchar("artist_id").references(() => artists.id, { onDelete: "cascade" }).notNull(),
+}, (table) => [
+  unique().on(table.songId, table.artistId),
+]);
+
+export const insertSongArtistSchema = createInsertSchema(songArtists).omit({
+  id: true,
+});
+export type InsertSongArtist = z.infer<typeof insertSongArtistSchema>;
+export type SongArtist = typeof songArtists.$inferSelect;
 
 // Song stories table
 export const songStories = pgTable("song_stories", {

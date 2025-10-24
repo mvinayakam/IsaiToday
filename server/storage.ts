@@ -8,6 +8,10 @@ import {
   tags,
   songTags,
   songOfTheDay,
+  albums,
+  languages,
+  artists,
+  songArtists,
   type User,
   type UpsertUser,
   type Song,
@@ -26,9 +30,17 @@ import {
   type InsertSongTag,
   type SongOfTheDay,
   type InsertSongOfTheDay,
+  type Album,
+  type InsertAlbum,
+  type Language,
+  type InsertLanguage,
+  type Artist,
+  type InsertArtist,
+  type SongArtist,
+  type InsertSongArtist,
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, and, desc, sql, inArray } from "drizzle-orm";
+import { eq, and, desc, sql, inArray, ilike } from "drizzle-orm";
 
 export interface IStorage {
   // User operations (required for Replit Auth)
@@ -80,6 +92,29 @@ export interface IStorage {
   // Song of the day operations
   getTodaysSongForUser(userId: string): Promise<SongOfTheDay | undefined>;
   createSongOfTheDay(sotd: InsertSongOfTheDay): Promise<SongOfTheDay>;
+  
+  // Album operations
+  getAlbumByName(name: string): Promise<Album | undefined>;
+  createAlbum(album: InsertAlbum): Promise<Album>;
+  getAllAlbums(): Promise<Album[]>;
+  searchAlbums(query: string): Promise<Album[]>;
+  
+  // Language operations
+  getLanguageByName(name: string): Promise<Language | undefined>;
+  createLanguage(language: InsertLanguage): Promise<Language>;
+  getAllLanguages(): Promise<Language[]>;
+  searchLanguages(query: string): Promise<Language[]>;
+  
+  // Artist operations
+  getArtistByName(name: string): Promise<Artist | undefined>;
+  createArtist(artist: InsertArtist): Promise<Artist>;
+  getAllArtists(): Promise<Artist[]>;
+  searchArtists(query: string): Promise<Artist[]>;
+  
+  // Song artist operations
+  addArtistToSong(songArtist: InsertSongArtist): Promise<SongArtist>;
+  getSongArtists(songId: string): Promise<Artist[]>;
+  removeArtistFromSong(songId: string, artistId: string): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -295,6 +330,99 @@ export class DatabaseStorage implements IStorage {
   async createSongOfTheDay(sotdData: InsertSongOfTheDay): Promise<SongOfTheDay> {
     const [sotd] = await db.insert(songOfTheDay).values(sotdData).returning();
     return sotd;
+  }
+
+  // Album operations
+  async getAlbumByName(name: string): Promise<Album | undefined> {
+    const [album] = await db.select().from(albums).where(eq(albums.name, name));
+    return album;
+  }
+
+  async createAlbum(albumData: InsertAlbum): Promise<Album> {
+    const [album] = await db.insert(albums).values(albumData).returning();
+    return album;
+  }
+
+  async getAllAlbums(): Promise<Album[]> {
+    return await db.select().from(albums).orderBy(albums.name);
+  }
+
+  async searchAlbums(query: string): Promise<Album[]> {
+    return await db
+      .select()
+      .from(albums)
+      .where(ilike(albums.name, `%${query}%`))
+      .orderBy(albums.name)
+      .limit(10);
+  }
+
+  // Language operations
+  async getLanguageByName(name: string): Promise<Language | undefined> {
+    const [language] = await db.select().from(languages).where(eq(languages.name, name));
+    return language;
+  }
+
+  async createLanguage(languageData: InsertLanguage): Promise<Language> {
+    const [language] = await db.insert(languages).values(languageData).returning();
+    return language;
+  }
+
+  async getAllLanguages(): Promise<Language[]> {
+    return await db.select().from(languages).orderBy(languages.name);
+  }
+
+  async searchLanguages(query: string): Promise<Language[]> {
+    return await db
+      .select()
+      .from(languages)
+      .where(ilike(languages.name, `%${query}%`))
+      .orderBy(languages.name)
+      .limit(10);
+  }
+
+  // Artist operations
+  async getArtistByName(name: string): Promise<Artist | undefined> {
+    const [artist] = await db.select().from(artists).where(eq(artists.name, name));
+    return artist;
+  }
+
+  async createArtist(artistData: InsertArtist): Promise<Artist> {
+    const [artist] = await db.insert(artists).values(artistData).returning();
+    return artist;
+  }
+
+  async getAllArtists(): Promise<Artist[]> {
+    return await db.select().from(artists).orderBy(artists.name);
+  }
+
+  async searchArtists(query: string): Promise<Artist[]> {
+    return await db
+      .select()
+      .from(artists)
+      .where(ilike(artists.name, `%${query}%`))
+      .orderBy(artists.name)
+      .limit(10);
+  }
+
+  // Song artist operations
+  async addArtistToSong(songArtistData: InsertSongArtist): Promise<SongArtist> {
+    const [songArtist] = await db.insert(songArtists).values(songArtistData).returning();
+    return songArtist;
+  }
+
+  async getSongArtists(songId: string): Promise<Artist[]> {
+    const results = await db
+      .select({ artist: artists })
+      .from(songArtists)
+      .innerJoin(artists, eq(songArtists.artistId, artists.id))
+      .where(eq(songArtists.songId, songId));
+    return results.map((r) => r.artist);
+  }
+
+  async removeArtistFromSong(songId: string, artistId: string): Promise<void> {
+    await db
+      .delete(songArtists)
+      .where(and(eq(songArtists.songId, songId), eq(songArtists.artistId, artistId)));
   }
 }
 
