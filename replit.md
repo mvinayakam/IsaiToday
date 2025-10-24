@@ -12,7 +12,14 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes (October 24, 2025)
 
-### Latest Update: Trademark Branding, Auth Gates, Tag Cloud & Comprehensive Seed Data ✅
+### Latest Update: UI/UX Improvements - Edit Visibility, Modal Fixes & Profile Navigation ✅
+- **Edit Button Visibility**: Made edit button always visible on song cards (no longer requires hover) for better discoverability
+- **Modal Close Button Fix**: Removed duplicate close button from YouTube player modal (now uses single built-in Radix UI close button)
+- **Profile Menu Enhancement**: Added "My Posts" and "My Likes" navigation items to profile dropdown menu for easier access
+- **End-to-End Tested**: All UI fixes verified working including edit button visibility, single close button, and profile navigation
+- **Architect Approved**: All changes reviewed and approved
+
+### Previous Update: Trademark Branding, Auth Gates, Tag Cloud & Comprehensive Seed Data ✅
 - **Trademark Branding**: Added IsaiToday™ symbol throughout the app (navbar, pages, meta tags, documentation)
 - **Authentication Gates**: Restricted Discover and Profile pages to authenticated users with branded login CTAs
 - **Consolidated Login**: Removed separate sign-in button from navbar; login only via page-level prompts (auth dropdown shown when logged in)
