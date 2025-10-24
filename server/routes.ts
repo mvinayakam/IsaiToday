@@ -53,6 +53,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/songs', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
+      console.log('[POST /api/songs] Request from user:', userId, 'body:', req.body);
       
       // Create album if provided and doesn't exist
       if (req.body.album && typeof req.body.album === 'string' && req.body.album.trim()) {
@@ -76,14 +77,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
         ...req.body,
         addedBy: userId,
       });
+      console.log('[POST /api/songs] Validated data:', validatedData);
       
       // Check if song already exists
       const existing = await storage.getSongByYoutubeId(validatedData.youtubeId);
       if (existing) {
+        console.log('[POST /api/songs] Song already exists, returning:', existing.id);
         return res.json(existing);
       }
       
       const song = await storage.createSong(validatedData);
+      console.log('[POST /api/songs] Song created successfully:', song.id, 'addedBy:', song.addedBy);
+      
+      // Verify it was actually saved
+      const verified = await storage.getSong(song.id);
+      console.log('[POST /api/songs] Verification query result:', verified ? 'Found' : 'NOT FOUND');
+      
       res.status(201).json(song);
     } catch (error) {
       console.error("Error creating song:", error);
@@ -353,16 +362,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Link artist to song
-  app.post('/api/songs/:songId/artists', isAuthenticated, async (req, res) => {
+  app.post('/api/songs/:songId/artists', isAuthenticated, async (req: any, res) => {
     try {
+      const userId = req.user.claims.sub;
+      
       if (!req.body.artistId || typeof req.body.artistId !== 'string') {
         return res.status(400).json({ message: "Invalid artistId" });
       }
       
-      // Verify song exists
+      // Verify song exists and user owns it
       const song = await storage.getSong(req.params.songId);
       if (!song) {
         return res.status(404).json({ message: "Song not found" });
+      }
+      
+      if (song.addedBy !== userId) {
+        return res.status(403).json({ message: "You can only modify songs you added" });
       }
       
       await storage.addArtistToSong({
@@ -381,8 +396,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Remove artist from song
-  app.delete('/api/songs/:songId/artists/:artistId', isAuthenticated, async (req, res) => {
+  app.delete('/api/songs/:songId/artists/:artistId', isAuthenticated, async (req: any, res) => {
     try {
+      const userId = req.user.claims.sub;
+      
+      // Verify song exists and user owns it
+      const song = await storage.getSong(req.params.songId);
+      if (!song) {
+        return res.status(404).json({ message: "Song not found" });
+      }
+      
+      if (song.addedBy !== userId) {
+        return res.status(403).json({ message: "You can only modify songs you added" });
+      }
+      
       await storage.removeArtistFromSong(req.params.songId, req.params.artistId);
       res.json({ message: "Artist removed from song" });
     } catch (error) {
@@ -410,16 +437,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Link tag to song
-  app.post('/api/songs/:songId/tags', isAuthenticated, async (req, res) => {
+  app.post('/api/songs/:songId/tags', isAuthenticated, async (req: any, res) => {
     try {
+      const userId = req.user.claims.sub;
+      
       if (!req.body.tagId || typeof req.body.tagId !== 'string') {
         return res.status(400).json({ message: "Invalid tagId" });
       }
       
-      // Verify song exists
+      // Verify song exists and user owns it
       const song = await storage.getSong(req.params.songId);
       if (!song) {
         return res.status(404).json({ message: "Song not found" });
+      }
+      
+      if (song.addedBy !== userId) {
+        return res.status(403).json({ message: "You can only modify songs you added" });
       }
       
       await storage.addTagToSong({
@@ -438,8 +471,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Remove tag from song
-  app.delete('/api/songs/:songId/tags/:tagId', isAuthenticated, async (req, res) => {
+  app.delete('/api/songs/:songId/tags/:tagId', isAuthenticated, async (req: any, res) => {
     try {
+      const userId = req.user.claims.sub;
+      
+      // Verify song exists and user owns it
+      const song = await storage.getSong(req.params.songId);
+      if (!song) {
+        return res.status(404).json({ message: "Song not found" });
+      }
+      
+      if (song.addedBy !== userId) {
+        return res.status(403).json({ message: "You can only modify songs you added" });
+      }
+      
       await storage.removeTagFromSong(req.params.songId, req.params.tagId);
       res.json({ message: "Tag removed from song" });
     } catch (error) {

@@ -336,13 +336,20 @@ export default function AddSongDialog({ trigger }: AddSongDialogProps) {
             {selectedArtists.length > 0 && (
               <div className="flex flex-wrap gap-2 mt-2">
                 {selectedArtists.map((artist) => (
-                  <Badge key={artist} variant="secondary" className="gap-1" data-testid={`badge-artist-${artist}`}>
-                    {artist}
-                    <X
-                      className="w-3 h-3 cursor-pointer"
-                      onClick={() => removeArtist(artist)}
+                  <Badge key={artist} variant="secondary" className="gap-1 pr-1" data-testid={`badge-artist-${artist}`}>
+                    <span>{artist}</span>
+                    <button
+                      type="button"
+                      className="ml-1 rounded-sm hover:bg-secondary-foreground/20 p-0.5"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        removeArtist(artist);
+                      }}
                       data-testid={`button-remove-artist-${artist}`}
-                    />
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
                   </Badge>
                 ))}
               </div>
@@ -386,13 +393,20 @@ export default function AddSongDialog({ trigger }: AddSongDialogProps) {
             {selectedTags.length > 0 && (
               <div className="flex flex-wrap gap-2 mt-2">
                 {selectedTags.map((tag) => (
-                  <Badge key={tag} variant="outline" className="gap-1" data-testid={`badge-tag-${tag}`}>
-                    {tag}
-                    <X
-                      className="w-3 h-3 cursor-pointer"
-                      onClick={() => removeTag(tag)}
+                  <Badge key={tag} variant="outline" className="gap-1 pr-1" data-testid={`badge-tag-${tag}`}>
+                    <span>{tag}</span>
+                    <button
+                      type="button"
+                      className="ml-1 rounded-sm hover:bg-muted p-0.5"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        removeTag(tag);
+                      }}
                       data-testid={`button-remove-tag-${tag}`}
-                    />
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
                   </Badge>
                 ))}
               </div>
