@@ -1,4 +1,4 @@
-import { Search, Music2, LogOut } from "lucide-react";
+import { Search, Music2, LogOut, Music, Heart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -59,6 +59,14 @@ export default function Navbar({
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => window.location.href = '/profile'} data-testid="menu-my-posts">
+                  <Music className="w-4 h-4 mr-2" />
+                  My Posts
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => window.location.href = '/profile'} data-testid="menu-my-likes">
+                  <Heart className="w-4 h-4 mr-2" />
+                  My Likes
+                </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => window.location.href = getLogoutUrl()} data-testid="button-logout">
                   <LogOut className="w-4 h-4 mr-2" />
                   Logout

@@ -92,18 +92,6 @@ export default function YouTubePlayerDialog({
 
           {/* Story & Metadata Section - 2/5 width */}
           <div className="md:col-span-2 flex flex-col bg-card/95 backdrop-blur-sm overflow-y-auto">
-            {/* Header with Close Button */}
-            <div className="sticky top-0 bg-card/95 backdrop-blur-sm border-b border-white/10 p-4 flex justify-end z-10">
-              <Button
-                size="icon"
-                variant="ghost"
-                onClick={() => onOpenChange(false)}
-                data-testid="button-close-player"
-              >
-                <X className="w-4 h-4" />
-              </Button>
-            </div>
-
             <div className="p-6 space-y-6">
               {/* Song Title */}
               <div>
