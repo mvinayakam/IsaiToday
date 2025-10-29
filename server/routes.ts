@@ -639,8 +639,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Check if user already has a song for today
       const existing = await storage.getTodaysSongForUser(userId);
       if (existing) {
-        const song = await storage.getSong(existing.songId);
-        return res.json(song);
+        const songWithPoster = await db
+          .select({
+            song: songs,
+            poster: users,
+          })
+          .from(songs)
+          .leftJoin(users, eq(songs.addedBy, users.id))
+          .where(eq(songs.id, existing.songId))
+          .limit(1);
+        
+        if (songWithPoster.length > 0) {
+          return res.json(songWithPoster[0]);
+        }
       }
       
       // Get all songs and pick a random one
@@ -658,7 +669,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         assignedDate: new Date(),
       });
       
-      res.json(randomSong);
+      // Fetch the song with poster info
+      const songWithPoster = await db
+        .select({
+          song: songs,
+          poster: users,
+        })
+        .from(songs)
+        .leftJoin(users, eq(songs.addedBy, users.id))
+        .where(eq(songs.id, randomSong.id))
+        .limit(1);
+      
+      res.json(songWithPoster[0] || { song: randomSong, poster: null });
     } catch (error) {
       console.error("Error fetching song of the day:", error);
       res.status(500).json({ message: "Failed to fetch song of the day" });
@@ -668,12 +690,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Feed route - shows recently liked songs
   app.get('/api/feed', async (req, res) => {
     try {
-      // Get all reactions ordered by most recent
+      // Get all reactions ordered by most recent with poster info
       const allReactions = await db
         .select({
           reaction: reactions,
           song: songs,
           user: users,
+          poster: sql<typeof users.$inferSelect>`
+            (SELECT row_to_json(u.*) FROM ${users} u WHERE u.id = ${songs.addedBy})
+          `.as('poster'),
           story: songStories,
         })
         .from(reactions)
