@@ -10,9 +10,21 @@ IsaiToday is a full-stack social discovery platform for sharing and exploring so
 
 Preferred communication style: Simple, everyday language.
 
-## Recent Changes (October 24, 2025)
+## Recent Changes (October 29, 2025)
 
-### Latest Update: Enhanced Song Sharing Accessibility & My Posts/My Likes Pages ✅
+### Latest Update: User Profile Pages & Poster Attribution ✅
+- **Poster Attribution**: Every song card now displays "Posted by [Username]" as a clickable link
+- **User Profile Pages**: Created public user profile pages at `/user/:userId` showing:
+  - User avatar, name, email, and statistics
+  - Complete list of songs the user has posted
+  - Complete list of songs the user has liked
+- **Backend Enhancements**: Updated `/api/discover` and `/api/users/:userId/reactions` to include poster (song sharer) information
+- **Consistent UX**: Poster links appear across Discover, My Likes, and User Profile pages
+- **Performance**: Efficient data fetching with no N+1 query patterns, proper React Query caching
+- **End-to-End Tested**: All features verified working including navigation, data display, and user profiles
+- **Architect Approved**: Complete implementation reviewed and approved
+
+### Previous Update: Enhanced Song Sharing Accessibility & My Posts/My Likes Pages ✅
 - **Visible Navbar "Add Song" Button**: Added prominent "Add Song" button in navbar (always visible when logged in) for easy song submission
 - **Floating Action Button (FAB)**: Added persistent floating action button in bottom-right corner on all pages for quick song sharing access
 - **My Posts Page**: Created dedicated `/my-posts` page showing user's posted songs with built-in edit functionality
@@ -101,10 +113,11 @@ Preferred communication style: Simple, everyday language.
 
 **Key Pages**
 - Home: Song of the Day feature with friend activity feed and trending songs
-- Discover: Grid-based exploration with tag filtering
+- Discover: Grid-based exploration with tag filtering and poster attribution
 - My Posts: Dedicated page showing user's posted songs with edit capability
-- My Likes: Dedicated page displaying all songs the user has liked
+- My Likes: Dedicated page displaying all songs the user has liked with poster links
 - Profile: User stats, liked songs, and playlist management
+- User Profile (`/user/:userId`): Public profile showing any user's posted and liked songs
 - Auth: Login/registration (currently OAuth-based via Replit)
 
 ### Backend Architecture
@@ -120,15 +133,15 @@ Preferred communication style: Simple, everyday language.
   - `/api/auth/user` - Current user session
   - `/api/song-of-day` - Daily song recommendation
   - `/api/feed` - Friend activity feed
-  - `/api/discover` - Trending songs
+  - `/api/discover` - Trending songs with poster (song sharer) information
   - `/api/songs` - Song CRUD operations with album/language support
   - `/api/songs/:songId/artists` - Link artists to songs
   - `/api/songs/:songId/tags` - Link tags to songs
   - `/api/playlists` - Playlist management
   - `/api/reactions` - Like/reaction tracking
-  - `/api/users/:userId` - Fetch user profiles
+  - `/api/users/:userId` - Fetch user profiles (public endpoint)
   - `/api/users/:userId/songs` - Fetch user's posted songs with reaction counts
-  - `/api/users/:userId/reactions` - Fetch user's liked songs
+  - `/api/users/:userId/reactions` - Fetch user's liked songs with poster information
   - `/api/albums/search` - Autocomplete for album names
   - `/api/languages/search` - Autocomplete for languages
   - `/api/artists/search` - Autocomplete for artist names
