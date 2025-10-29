@@ -12,16 +12,27 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes (October 29, 2025)
 
-### Latest Update: User Profile Pages & Poster Attribution ✅
-- **Poster Attribution**: Every song card now displays "Posted by [Username]" as a clickable link
+### Latest Update: Complete Poster Attribution Across All Pages ✅
+- **Universal Poster Attribution**: Every song display now shows "Posted by [Username]" as a clickable link:
+  - Song of the Day hero section
+  - Feed carousel (Your Feed)
+  - Trending carousel (Trending Now)
+  - Discover page grid
+  - My Likes page
+  - User Profile pages
+- **Clickable Story Attribution**: YouTube player modal now has clickable username in story section
 - **User Profile Pages**: Created public user profile pages at `/user/:userId` showing:
   - User avatar, name, email, and statistics
   - Complete list of songs the user has posted
   - Complete list of songs the user has liked
-- **Backend Enhancements**: Updated `/api/discover` and `/api/users/:userId/reactions` to include poster (song sharer) information
-- **Consistent UX**: Poster links appear across Discover, My Likes, and User Profile pages
+- **Backend Enhancements**: Updated all song-fetching endpoints to include poster information:
+  - `/api/song-of-day`: Returns `{song, poster}` with leftJoin to users
+  - `/api/feed`: Includes poster via SQL subquery
+  - `/api/discover`: Includes poster via leftJoin
+  - `/api/users/:userId/reactions`: Includes poster for liked songs
+- **Consistent UX**: Poster links appear everywhere songs are displayed
 - **Performance**: Efficient data fetching with no N+1 query patterns, proper React Query caching
-- **End-to-End Tested**: All features verified working including navigation, data display, and user profiles
+- **End-to-End Tested**: All features verified working including Song of the Day, carousels, modal, and navigation
 - **Architect Approved**: Complete implementation reviewed and approved
 
 ### Previous Update: Enhanced Song Sharing Accessibility & My Posts/My Likes Pages ✅
