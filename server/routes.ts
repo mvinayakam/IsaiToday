@@ -247,11 +247,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get('/api/users/:userId/reactions', async (req, res) => {
     try {
-      // Get reactions with full song details, including reaction counts
+      // Get reactions with full song details, poster info, and reaction counts
       const reactionsWithSongs = await db
         .select({
           reaction: reactions,
           song: songs,
+          poster: users,
           reactionCount: sql<number>`(
             SELECT COUNT(*) FROM ${reactions} r 
             WHERE r.song_id = ${songs.id}
@@ -259,6 +260,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         })
         .from(reactions)
         .innerJoin(songs, eq(reactions.songId, songs.id))
+        .leftJoin(users, eq(songs.addedBy, users.id))
         .where(eq(reactions.userId, req.params.userId))
         .orderBy(desc(reactions.createdAt))
         .limit(50);
@@ -694,15 +696,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Discover/trending route - shows songs with most reactions
   app.get('/api/discover', async (req, res) => {
     try {
-      // First get trending songs with reaction counts
+      // First get trending songs with reaction counts and poster info
       const trendingSongs = await db
         .select({
           song: songs,
           reactionCount: sql<number>`count(${reactions.id})::int`,
+          poster: users,
         })
         .from(songs)
         .leftJoin(reactions, eq(songs.id, reactions.songId))
-        .groupBy(songs.id)
+        .leftJoin(users, eq(songs.addedBy, users.id))
+        .groupBy(songs.id, users.id)
         .orderBy(desc(sql`count(${reactions.id})`))
         .limit(50);
       

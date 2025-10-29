@@ -2,7 +2,7 @@ import DiscoverGrid from "@/components/DiscoverGrid";
 import TagCloud from "@/components/TagCloud";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth, getLoginUrl } from "@/hooks/use-auth";
-import type { Song, Tag, SongStory } from "@shared/schema";
+import type { Song, Tag, SongStory, User } from "@shared/schema";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
@@ -11,6 +11,7 @@ interface TrendingSong {
   song: Song;
   reactionCount: number;
   story: SongStory | null;
+  poster: User | null;
 }
 
 interface TagCloudItem {
@@ -39,6 +40,7 @@ export default function Discover() {
   const songs = trendingData.map((item) => ({
     song: item.song,
     story: item.story ?? undefined,
+    poster: item.poster ?? undefined,
     tags: [],
     likes: item.reactionCount,
     plays: 0,

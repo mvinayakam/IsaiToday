@@ -9,6 +9,7 @@ import Discover from "@/pages/Discover";
 import Profile from "@/pages/Profile";
 import MyPosts from "@/pages/MyPosts";
 import MyLikes from "@/pages/MyLikes";
+import UserProfile from "@/pages/UserProfile";
 import NotFound from "@/pages/not-found";
 import { Home as HomeIcon, Compass, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -83,6 +84,7 @@ function Router() {
       <Route path="/profile" component={Profile} />
       <Route path="/my-posts" component={MyPosts} />
       <Route path="/my-likes" component={MyLikes} />
+      <Route path="/user/:userId" component={UserProfile} />
       <Route component={NotFound} />
     </Switch>
   );

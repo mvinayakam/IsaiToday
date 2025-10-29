@@ -10,6 +10,7 @@ interface SongCardProps {
   song: Song;
   story?: SongStory;
   currentUserId?: string;
+  poster?: User;
   tags?: string[];
   likes?: number;
   plays?: number;
@@ -35,6 +36,7 @@ export default function SongCard({
   song,
   story,
   currentUserId,
+  poster,
   tags = [],
   likes = 0,
   plays = 0,
@@ -167,6 +169,21 @@ export default function SongCard({
           <p className="text-sm text-muted-foreground line-clamp-1" data-testid={`text-artist-${song.youtubeId}`}>
             {song.artist}
           </p>
+          {poster && (
+            <p className="text-xs text-muted-foreground mt-1">
+              Posted by{" "}
+              <a 
+                href={`/user/${poster.id}`}
+                className="text-primary hover:underline"
+                onClick={(e) => {
+                  e.stopPropagation();
+                }}
+                data-testid={`link-poster-${song.youtubeId}`}
+              >
+                {poster.firstName} {poster.lastName}
+              </a>
+            </p>
+          )}
         </div>
 
         {story?.story && (

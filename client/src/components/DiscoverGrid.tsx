@@ -7,6 +7,7 @@ import type { Song, SongStory, Artist, Tag, User } from "@shared/schema";
 interface DiscoverSong {
   song: Song;
   story?: SongStory;
+  poster?: User;
   tags?: string[];
   likes?: number;
   plays?: number;
@@ -141,6 +142,7 @@ export default function DiscoverGrid({
             key={item.song.youtubeId}
             song={item.song}
             story={item.story}
+            poster={item.poster}
             tags={item.tags}
             likes={item.likes}
             plays={item.plays}

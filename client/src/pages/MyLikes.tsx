@@ -2,11 +2,12 @@ import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
 import { Skeleton } from "@/components/ui/skeleton";
 import SongCard from "@/components/SongCard";
-import type { Song, Reaction } from "@shared/schema";
+import type { Song, Reaction, User } from "@shared/schema";
 
 interface LikedSong {
   reaction: Reaction;
   song: Song;
+  poster: User | null;
   reactionCount: number;
 }
 
@@ -51,10 +52,11 @@ export default function MyLikes() {
           </div>
         ) : likedSongs.length > 0 ? (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-            {likedSongs.map(({ song, reactionCount }) => (
+            {likedSongs.map(({ song, poster, reactionCount }) => (
               <SongCard
                 key={song.id}
                 song={song}
+                poster={poster ?? undefined}
                 tags={[]}
                 likes={reactionCount}
                 plays={0}
