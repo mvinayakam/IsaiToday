@@ -6,6 +6,7 @@ import type { Song, SongStory, Artist, Tag, User } from "@shared/schema";
 
 interface FeedSong {
   song: Song;
+  poster?: User;
   story?: SongStory;
   tags?: string[];
   likes?: number;
@@ -120,6 +121,7 @@ export default function FeedCarousel({
             <div key={item.song.youtubeId} className="snap-start">
               <SongCard
                 song={item.song}
+                poster={item.poster}
                 story={item.story}
                 tags={item.tags}
                 likes={item.likes}

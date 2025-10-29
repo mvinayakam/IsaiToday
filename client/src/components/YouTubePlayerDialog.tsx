@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ChevronLeft, ChevronRight, X } from "lucide-react";
+import { Link } from "wouter";
 import type { Song, SongStory, User } from "@shared/schema";
 
 interface YouTubePlayerDialogProps {
@@ -116,9 +117,11 @@ export default function YouTubePlayerDialog({
                       </AvatarFallback>
                     </Avatar>
                     <div>
-                      <p className="font-medium" data-testid="text-story-user-name">
-                        {user.firstName} {user.lastName}
-                      </p>
+                      <Link href={`/user/${user.id}`}>
+                        <a className="font-medium hover:text-primary transition-colors cursor-pointer" data-testid="link-story-user">
+                          {user.firstName} {user.lastName}
+                        </a>
+                      </Link>
                       <p className="text-xs text-muted-foreground">shared their story</p>
                     </div>
                   </div>

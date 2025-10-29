@@ -2,11 +2,12 @@ import { Heart, ListPlus, Share2, Play } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useState } from "react";
+import { Link } from "wouter";
+import type { Song, User } from "@shared/schema";
 
 interface SongOfTheDayProps {
-  youtubeId: string;
-  title: string;
-  artist: string;
+  song: Song;
+  poster?: User;
   story?: string;
   tags?: string[];
   likes?: number;
@@ -17,9 +18,8 @@ interface SongOfTheDayProps {
 }
 
 export default function SongOfTheDay({
-  youtubeId,
-  title,
-  artist,
+  song,
+  poster,
   story,
   tags = [],
   likes = 0,
@@ -28,6 +28,7 @@ export default function SongOfTheDay({
   onAddToPlaylist,
   onShare
 }: SongOfTheDayProps) {
+  const { youtubeId, title, artist } = song;
   const [liked, setLiked] = useState(isLiked);
   const [likeCount, setLikeCount] = useState(likes);
 
@@ -49,6 +50,16 @@ export default function SongOfTheDay({
           {title}
         </h1>
         <p className="text-xl text-muted-foreground mb-4" data-testid="text-sotd-artist">{artist}</p>
+        
+        {poster && (
+          <div className="mb-4">
+            <Link href={`/user/${poster.id}`}>
+              <a className="text-sm text-muted-foreground hover:text-foreground transition-colors" data-testid={`link-sotd-poster-${poster.id}`}>
+                Posted by {poster.firstName} {poster.lastName}
+              </a>
+            </Link>
+          </div>
+        )}
         
         {story && (
           <div className="max-w-2xl mx-auto">

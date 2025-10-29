@@ -16,13 +16,20 @@ interface FeedItem {
   reaction: Reaction;
   song: Song;
   user: User;
+  poster: User | null;
   story: SongStory | null;
 }
 
 interface TrendingSong {
   song: Song;
+  poster: User | null;
   reactionCount: number;
   story: SongStory | null;
+}
+
+interface SongOfDayData {
+  song: Song;
+  poster: User | null;
 }
 
 function LoadingSkeleton() {
@@ -39,7 +46,7 @@ export default function Home() {
   const { user, isAuthenticated, isLoading: authLoading } = useAuth();
   const { toast } = useToast();
   
-  const { data: songOfDay, isLoading: sotdLoading } = useQuery<Song>({
+  const { data: songOfDayData, isLoading: sotdLoading } = useQuery<SongOfDayData>({
     queryKey: ['/api/song-of-day'],
     enabled: isAuthenticated,
   });
@@ -106,6 +113,7 @@ export default function Home() {
 
   const feedSongs = feedData.map((item) => ({
     song: item.song,
+    poster: item.poster ?? undefined,
     story: item.story ?? undefined,
     tags: [],
     likes: 0,
@@ -114,6 +122,7 @@ export default function Home() {
 
   const trendingSongs = trendingData.map((item) => ({
     song: item.song,
+    poster: item.poster ?? undefined,
     story: item.story ?? undefined,
     tags: [],
     likes: item.reactionCount,
@@ -122,15 +131,14 @@ export default function Home() {
 
   return (
     <div className="min-h-screen pt-16 md:pt-20">
-      {songOfDay && (
+      {songOfDayData && (
         <SongOfTheDay
-          youtubeId={songOfDay.youtubeId}
-          title={songOfDay.title}
-          artist={songOfDay.artist}
+          song={songOfDayData.song}
+          poster={songOfDayData.poster ?? undefined}
           story="This is your song of the day! Share why you love it."
           tags={[]}
           likes={0}
-          onLike={() => handleLikeSong(songOfDay.id)}
+          onLike={() => handleLikeSong(songOfDayData.song.id)}
           onAddToPlaylist={() => console.log('Add to playlist')}
           onShare={() => console.log('Share SOTD')}
         />
