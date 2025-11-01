@@ -3,6 +3,12 @@
 ## Overview
 IsaiToday is a full-stack social discovery platform for sharing and exploring songs globally, with a focus on Indian music. It offers daily song recommendations, playlist creation, song reactions, and a trending music feed. The platform integrates with YouTube for playback and metadata, featuring a dark-mode design inspired by Spotify and Notion. Its core purpose is to connect users through shared musical experiences, offering a unique blend of social interaction and music discovery.
 
+### Key Features
+- **Social Commenting**: Users can comment on songs with support for @mentions to tag other users
+- **User Tagging**: @mention autocomplete functionality allows users to easily tag others in comments
+- **Interactive Comments**: Mentions are displayed as clickable links to user profiles
+- **Comment Management**: Users can delete their own comments with a simple click
+
 ## User Preferences
 Preferred communication style: Simple, everyday language.
 
@@ -22,7 +28,7 @@ Preferred communication style: Simple, everyday language.
 
 ### Data Storage
 - **Database**: PostgreSQL via Neon serverless driver, using Drizzle ORM for type-safe queries and schema management.
-- **Schema Design**: Tables for `users`, `songs`, `albums`, `languages`, `artists`, `songArtists`, `songStories`, `reactions`, `playlists`, `playlistSongs`, `tags`, `songTags`, `songOfTheDay`, and `sessions`.
+- **Schema Design**: Tables for `users`, `songs`, `albums`, `languages`, `artists`, `songArtists`, `songStories`, `reactions`, `playlists`, `playlistSongs`, `tags`, `songTags`, `songOfTheDay`, `comments`, `userMentions`, and `sessions`.
 - **Database Migrations**: Drizzle Kit for schema migrations.
 
 ## External Dependencies
