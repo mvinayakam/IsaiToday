@@ -287,22 +287,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const comment = await storage.createComment(validatedData);
       
       // Extract @mentions and save them
-      const mentionRegex = /@([a-zA-Z0-9_]+)/g;
+      // Format: @FirstnameLastname (no spaces)
+      const mentionRegex = /@([a-zA-Z0-9]+)/g;
       const mentions = Array.from(validatedData.content.matchAll(mentionRegex));
       
+      const processedMentions = new Set<string>();
+      
       for (const match of mentions) {
-        const username = match[1];
-        // Search for users matching the username
-        const matchedUsers = await storage.searchUsers(username);
-        for (const user of matchedUsers) {
-          const fullName = `${user.firstName} ${user.lastName}`.toLowerCase();
-          if (fullName.includes(username.toLowerCase())) {
-            await storage.createUserMention({
-              commentId: comment.id,
-              storyId: null,
-              mentionedUserId: user.id,
-            });
-          }
+        const mentionText = match[1];
+        
+        // Search for users whose first+last name (without spaces) matches the mention
+        const matchedUsers = await storage.searchUsers(mentionText);
+        
+        // Find exact match: firstName+lastName (case insensitive, no spaces)
+        const matchedUser = matchedUsers.find(user => {
+          const fullName = `${user.firstName || ''}${user.lastName || ''}`.toLowerCase().replace(/\s+/g, '');
+          return fullName === mentionText.toLowerCase();
+        });
+        
+        if (matchedUser && !processedMentions.has(matchedUser.id)) {
+          await storage.createUserMention({
+            commentId: comment.id,
+            storyId: null,
+            mentionedUserId: matchedUser.id,
+          });
+          processedMentions.add(matchedUser.id);
         }
       }
       
@@ -325,7 +334,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
         .where(eq(comments.songId, req.params.songId))
         .orderBy(desc(comments.createdAt));
       
-      res.json(commentsWithUsers);
+      // Fetch mentioned users for each comment
+      const commentsWithMentions = await Promise.all(
+        commentsWithUsers.map(async (item) => {
+          const mentionedUsers = await db
+            .select({
+              user: users,
+            })
+            .from(userMentions)
+            .innerJoin(users, eq(userMentions.mentionedUserId, users.id))
+            .where(eq(userMentions.commentId, item.comment.id));
+          
+          return {
+            ...item,
+            mentionedUsers: mentionedUsers.map(m => m.user),
+          };
+        })
+      );
+      
+      res.json(commentsWithMentions);
     } catch (error) {
       console.error("Error fetching comments:", error);
       res.status(500).json({ message: "Failed to fetch comments" });

@@ -23,6 +23,12 @@ interface Comment {
     lastName: string | null;
     profileImageUrl: string | null;
   };
+  mentionedUsers: {
+    id: string;
+    firstName: string | null;
+    lastName: string | null;
+    profileImageUrl: string | null;
+  }[];
 }
 
 interface User {
@@ -129,13 +135,17 @@ export function CommentSection({ songId, currentUserId }: CommentSectionProps) {
 
   // Insert mention into textarea
   const insertMention = (user: User) => {
-    const userName = `${user.firstName} ${user.lastName}`;
+    // Create mention handle from first and last name, handling nulls
+    const firstName = user.firstName || '';
+    const lastName = user.lastName || '';
+    const userName = `${firstName}${lastName}` || user.id.slice(0, 8);
+    
     const textBeforeCursor = content.slice(0, cursorPosition);
     const textAfterCursor = content.slice(cursorPosition);
     
     // Remove the partial @ mention
     const beforeMention = textBeforeCursor.replace(/@\w*$/, "");
-    const newContent = `${beforeMention}@${userName.replace(/\s+/g, "")} ${textAfterCursor}`;
+    const newContent = `${beforeMention}@${userName} ${textAfterCursor}`;
     
     setContent(newContent);
     setShowSuggestions(false);
@@ -153,11 +163,32 @@ export function CommentSection({ songId, currentUserId }: CommentSectionProps) {
   };
 
   // Parse comment content to make @mentions clickable
-  const parseContent = (text: string) => {
-    const parts = text.split(/(@[a-zA-Z0-9_]+)/g);
+  const parseContent = (text: string, mentionedUsers: Comment['mentionedUsers']) => {
+    const parts = text.split(/(@[a-zA-Z0-9]+)/g);
     return parts.map((part, index) => {
       if (part.startsWith("@")) {
-        const username = part.slice(1);
+        const mentionText = part.slice(1);
+        
+        // Find the mentioned user by matching firstName+lastName (no spaces)
+        const mentionedUser = mentionedUsers.find(u => {
+          const fullName = `${u.firstName || ''}${u.lastName || ''}`.toLowerCase();
+          return fullName === mentionText.toLowerCase();
+        });
+        
+        if (mentionedUser) {
+          return (
+            <Link 
+              key={index} 
+              href={`/user/${mentionedUser.id}`}
+              className="text-primary font-medium hover:underline"
+              data-testid={`link-mention-${mentionedUser.id}`}
+            >
+              {part}
+            </Link>
+          );
+        }
+        
+        // Fallback: show as styled text if user not found
         return (
           <span key={index} className="text-primary font-medium">
             {part}
@@ -231,7 +262,7 @@ export function CommentSection({ songId, currentUserId }: CommentSectionProps) {
             No comments yet. Be the first to comment!
           </p>
         ) : (
-          comments.map(({ comment, user: commentUser }) => (
+          comments.map(({ comment, user: commentUser, mentionedUsers }) => (
             <div
               key={comment.id}
               className="flex gap-3 group"
@@ -275,7 +306,7 @@ export function CommentSection({ songId, currentUserId }: CommentSectionProps) {
                 </div>
                 
                 <p className="text-sm text-foreground" data-testid={`text-comment-content-${comment.id}`}>
-                  {parseContent(comment.content)}
+                  {parseContent(comment.content, mentionedUsers)}
                 </p>
               </div>
             </div>
