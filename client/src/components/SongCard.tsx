@@ -150,6 +150,7 @@ export default function SongCard({
         onPrevious={onPrevious}
         hasNext={hasNext}
         hasPrevious={hasPrevious}
+        currentUserId={currentUserId}
       />
 
       <EditSongDialog

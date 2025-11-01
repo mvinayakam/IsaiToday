@@ -2,9 +2,11 @@ import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Separator } from "@/components/ui/separator";
 import { ChevronLeft, ChevronRight, X } from "lucide-react";
 import { Link } from "wouter";
 import type { Song, SongStory, User } from "@shared/schema";
+import { CommentSection } from "./CommentSection";
 
 interface YouTubePlayerDialogProps {
   open: boolean;
@@ -20,6 +22,7 @@ interface YouTubePlayerDialogProps {
   onPrevious?: () => void;
   hasNext?: boolean;
   hasPrevious?: boolean;
+  currentUserId?: string;
 }
 
 export default function YouTubePlayerDialog({
@@ -36,6 +39,7 @@ export default function YouTubePlayerDialog({
   onPrevious,
   hasNext = false,
   hasPrevious = false,
+  currentUserId,
 }: YouTubePlayerDialogProps) {
   const embedUrl = `https://www.youtube.com/embed/${youtubeId}?autoplay=1&controls=1&modestbranding=1`;
 
@@ -177,6 +181,14 @@ export default function YouTubePlayerDialog({
                       day: 'numeric' 
                     })}
                   </p>
+                </div>
+              )}
+
+              {/* Comments Section */}
+              {song && (
+                <div className="pt-6 border-t border-white/10">
+                  <h3 className="text-lg font-semibold mb-4">Comments</h3>
+                  <CommentSection songId={song.id} currentUserId={currentUserId} />
                 </div>
               )}
             </div>

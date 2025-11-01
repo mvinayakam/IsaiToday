@@ -288,7 +288,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Extract @mentions and save them
       const mentionRegex = /@([a-zA-Z0-9_]+)/g;
-      const mentions = [...validatedData.content.matchAll(mentionRegex)];
+      const mentions = Array.from(validatedData.content.matchAll(mentionRegex));
       
       for (const match of mentions) {
         const username = match[1];
