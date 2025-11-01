@@ -76,22 +76,39 @@ export default function AddSongDialog({ trigger, open: externalOpen, onOpenChang
         }
         
         const metadata = await response.json();
+        let fieldsUpdated = false;
         
-        // Only auto-fill if fields are empty
-        if (!title && metadata.title) {
-          setTitle(metadata.title);
-        }
-        if (selectedArtists.length === 0 && metadata.artist) {
-          setSelectedArtists([metadata.artist]);
-        }
-        if (!album && metadata.album) {
-          setAlbum(metadata.album);
-        }
-
-        toast({
-          title: "Metadata loaded!",
-          description: "We've automatically filled in the song details from YouTube",
+        // Only auto-fill if fields are empty - use functional setters to check latest values
+        setTitle(prev => {
+          if (!prev && metadata.title) {
+            fieldsUpdated = true;
+            return metadata.title;
+          }
+          return prev;
         });
+        
+        setSelectedArtists(prev => {
+          if (prev.length === 0 && metadata.artist) {
+            fieldsUpdated = true;
+            return [metadata.artist];
+          }
+          return prev;
+        });
+        
+        setAlbum(prev => {
+          if (!prev && metadata.album) {
+            fieldsUpdated = true;
+            return metadata.album;
+          }
+          return prev;
+        });
+
+        if (fieldsUpdated) {
+          toast({
+            title: "Metadata loaded!",
+            description: "We've automatically filled in the song details from YouTube",
+          });
+        }
       } catch (error) {
         console.error('Error fetching YouTube metadata:', error);
         // Silently fail - user can still manually enter data
@@ -108,7 +125,7 @@ export default function AddSongDialog({ trigger, open: externalOpen, onOpenChang
     }, 500);
 
     return () => clearTimeout(timeoutId);
-  }, [youtubeUrl]);
+  }, [youtubeUrl]); // toast is stable, safe to omit from deps
 
   // Fetch album suggestions
   useEffect(() => {
