@@ -2,7 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
-import { insertSongSchema, insertSongStorySchema, insertReactionSchema, insertPlaylistSchema, insertPlaylistSongSchema, insertTagSchema, insertAlbumSchema, insertLanguageSchema, insertArtistSchema, songs, songStories, reactions, users, tags, songTags, type InsertSong } from "@shared/schema";
+import { insertSongSchema, insertSongStorySchema, insertReactionSchema, insertPlaylistSchema, insertPlaylistSongSchema, insertTagSchema, insertAlbumSchema, insertLanguageSchema, insertArtistSchema, insertCommentSchema, songs, songStories, reactions, users, tags, songTags, comments, type InsertSong } from "@shared/schema";
 import { seedDatabase } from "./seed";
 import { db } from "./db";
 import { eq, desc, sql, and } from "drizzle-orm";
@@ -270,6 +270,107 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching user reactions:", error);
       res.status(500).json({ message: "Failed to fetch reactions" });
+    }
+  });
+
+  // Comment routes
+  app.post('/api/songs/:songId/comments', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      
+      const validatedData = insertCommentSchema.parse({
+        songId: req.params.songId,
+        userId,
+        content: req.body.content,
+      });
+      
+      const comment = await storage.createComment(validatedData);
+      
+      // Extract @mentions and save them
+      const mentionRegex = /@([a-zA-Z0-9_]+)/g;
+      const mentions = [...validatedData.content.matchAll(mentionRegex)];
+      
+      for (const match of mentions) {
+        const username = match[1];
+        // Search for users matching the username
+        const matchedUsers = await storage.searchUsers(username);
+        for (const user of matchedUsers) {
+          const fullName = `${user.firstName} ${user.lastName}`.toLowerCase();
+          if (fullName.includes(username.toLowerCase())) {
+            await storage.createUserMention({
+              commentId: comment.id,
+              storyId: null,
+              mentionedUserId: user.id,
+            });
+          }
+        }
+      }
+      
+      res.status(201).json(comment);
+    } catch (error) {
+      console.error("Error creating comment:", error);
+      res.status(500).json({ message: "Failed to create comment" });
+    }
+  });
+
+  app.get('/api/songs/:songId/comments', async (req, res) => {
+    try {
+      const commentsWithUsers = await db
+        .select({
+          comment: comments,
+          user: users,
+        })
+        .from(comments)
+        .innerJoin(users, eq(comments.userId, users.id))
+        .where(eq(comments.songId, req.params.songId))
+        .orderBy(desc(comments.createdAt));
+      
+      res.json(commentsWithUsers);
+    } catch (error) {
+      console.error("Error fetching comments:", error);
+      res.status(500).json({ message: "Failed to fetch comments" });
+    }
+  });
+
+  app.delete('/api/comments/:commentId', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      
+      // Get the comment to verify ownership
+      const [comment] = await db
+        .select()
+        .from(comments)
+        .where(eq(comments.id, req.params.commentId));
+      
+      if (!comment) {
+        return res.status(404).json({ message: "Comment not found" });
+      }
+      
+      if (comment.userId !== userId) {
+        return res.status(403).json({ message: "Not authorized to delete this comment" });
+      }
+      
+      await storage.deleteComment(req.params.commentId);
+      res.json({ message: "Comment deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting comment:", error);
+      res.status(500).json({ message: "Failed to delete comment" });
+    }
+  });
+
+  // Search users for @mentions
+  app.get('/api/users/search', async (req, res) => {
+    try {
+      const query = req.query.q as string;
+      if (!query || query.length < 2) {
+        return res.json([]);
+      }
+      
+      const users = await storage.searchUsers(query);
+      res.json(users);
+    } catch (error) {
+      console.error("Error searching users:", error);
+      res.status(500).json({ message: "Failed to search users" });
     }
   });
 
