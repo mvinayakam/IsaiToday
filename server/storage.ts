@@ -12,6 +12,8 @@ import {
   languages,
   artists,
   songArtists,
+  comments,
+  userMentions,
   type User,
   type UpsertUser,
   type Song,
@@ -38,6 +40,10 @@ import {
   type InsertArtist,
   type SongArtist,
   type InsertSongArtist,
+  type Comment,
+  type InsertComment,
+  type UserMention,
+  type InsertUserMention,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, desc, sql, inArray, ilike } from "drizzle-orm";
@@ -116,6 +122,16 @@ export interface IStorage {
   addArtistToSong(songArtist: InsertSongArtist): Promise<SongArtist>;
   getSongArtists(songId: string): Promise<Artist[]>;
   removeArtistFromSong(songId: string, artistId: string): Promise<void>;
+  
+  // Comment operations
+  createComment(comment: InsertComment): Promise<Comment>;
+  getCommentsBySongId(songId: string): Promise<Comment[]>;
+  deleteComment(id: string): Promise<void>;
+  
+  // User mention operations
+  createUserMention(mention: InsertUserMention): Promise<UserMention>;
+  getMentionsByCommentId(commentId: string): Promise<UserMention[]>;
+  searchUsers(query: string): Promise<User[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -433,6 +449,47 @@ export class DatabaseStorage implements IStorage {
     await db
       .delete(songArtists)
       .where(and(eq(songArtists.songId, songId), eq(songArtists.artistId, artistId)));
+  }
+
+  // Comment operations
+  async createComment(commentData: InsertComment): Promise<Comment> {
+    const [comment] = await db.insert(comments).values(commentData).returning();
+    return comment;
+  }
+
+  async getCommentsBySongId(songId: string): Promise<Comment[]> {
+    return await db
+      .select()
+      .from(comments)
+      .where(eq(comments.songId, songId))
+      .orderBy(desc(comments.createdAt));
+  }
+
+  async deleteComment(id: string): Promise<void> {
+    await db.delete(comments).where(eq(comments.id, id));
+  }
+
+  // User mention operations
+  async createUserMention(mentionData: InsertUserMention): Promise<UserMention> {
+    const [mention] = await db.insert(userMentions).values(mentionData).returning();
+    return mention;
+  }
+
+  async getMentionsByCommentId(commentId: string): Promise<UserMention[]> {
+    return await db
+      .select()
+      .from(userMentions)
+      .where(eq(userMentions.commentId, commentId));
+  }
+
+  async searchUsers(query: string): Promise<User[]> {
+    return await db
+      .select()
+      .from(users)
+      .where(
+        sql`${users.firstName} || ' ' || ${users.lastName} ILIKE ${`%${query}%`}`
+      )
+      .limit(10);
   }
 }
 

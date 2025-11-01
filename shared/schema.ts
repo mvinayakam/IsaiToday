@@ -230,3 +230,40 @@ export const insertSongOfTheDaySchema = createInsertSchema(songOfTheDay).omit({
 });
 export type InsertSongOfTheDay = z.infer<typeof insertSongOfTheDaySchema>;
 export type SongOfTheDay = typeof songOfTheDay.$inferSelect;
+
+// Comments table
+export const comments = pgTable("comments", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  songId: varchar("song_id").references(() => songs.id, { onDelete: "cascade" }).notNull(),
+  userId: varchar("user_id").references(() => users.id).notNull(),
+  content: text("content").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  index("idx_comments_song").on(table.songId),
+  index("idx_comments_user").on(table.userId),
+]);
+
+export const insertCommentSchema = createInsertSchema(comments).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type InsertComment = z.infer<typeof insertCommentSchema>;
+export type Comment = typeof comments.$inferSelect;
+
+// User mentions table (for tracking @mentions in comments and stories)
+export const userMentions = pgTable("user_mentions", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  commentId: varchar("comment_id").references(() => comments.id, { onDelete: "cascade" }),
+  storyId: varchar("story_id").references(() => songStories.id, { onDelete: "cascade" }),
+  mentionedUserId: varchar("mentioned_user_id").references(() => users.id).notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertUserMentionSchema = createInsertSchema(userMentions).omit({
+  id: true,
+  createdAt: true,
+});
+export type InsertUserMention = z.infer<typeof insertUserMentionSchema>;
+export type UserMention = typeof userMentions.$inferSelect;
