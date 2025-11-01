@@ -1,227 +1,33 @@
 # IsaiToday™ - Social Music Discovery Platform
 
 ## Overview
-
-IsaiToday is a full-stack social discovery platform for sharing and exploring songs from around the world, with a strong Indian music presence. Users receive a daily song recommendation, can create playlists, react to songs, and discover trending music through a feed-based interface. The platform features YouTube integration for song playback and metadata, with a sophisticated dark-mode design inspired by Spotify and Notion aesthetics.
-
-**Status:** ✅ Fully functional with authenticated user flows, database integration, and end-to-end tested
+IsaiToday is a full-stack social discovery platform for sharing and exploring songs globally, with a focus on Indian music. It offers daily song recommendations, playlist creation, song reactions, and a trending music feed. The platform integrates with YouTube for playback and metadata, featuring a dark-mode design inspired by Spotify and Notion. Its core purpose is to connect users through shared musical experiences, offering a unique blend of social interaction and music discovery.
 
 ## User Preferences
-
 Preferred communication style: Simple, everyday language.
-
-## Recent Changes (October 29, 2025)
-
-### Latest Update: Complete Poster Attribution Across All Pages ✅
-- **Universal Poster Attribution**: Every song display now shows "Posted by [Username]" as a clickable link:
-  - Song of the Day hero section
-  - Feed carousel (Your Feed)
-  - Trending carousel (Trending Now)
-  - Discover page grid
-  - My Likes page
-  - User Profile pages
-- **Clickable Story Attribution**: YouTube player modal now has clickable username in story section
-- **User Profile Pages**: Created public user profile pages at `/user/:userId` showing:
-  - User avatar, name, email, and statistics
-  - Complete list of songs the user has posted
-  - Complete list of songs the user has liked
-- **Backend Enhancements**: Updated all song-fetching endpoints to include poster information:
-  - `/api/song-of-day`: Returns `{song, poster}` with leftJoin to users
-  - `/api/feed`: Includes poster via SQL subquery
-  - `/api/discover`: Includes poster via leftJoin
-  - `/api/users/:userId/reactions`: Includes poster for liked songs
-- **Consistent UX**: Poster links appear everywhere songs are displayed
-- **Performance**: Efficient data fetching with no N+1 query patterns, proper React Query caching
-- **End-to-End Tested**: All features verified working including Song of the Day, carousels, modal, and navigation
-- **Architect Approved**: Complete implementation reviewed and approved
-
-### Previous Update: Enhanced Song Sharing Accessibility & My Posts/My Likes Pages ✅
-- **Visible Navbar "Add Song" Button**: Added prominent "Add Song" button in navbar (always visible when logged in) for easy song submission
-- **Floating Action Button (FAB)**: Added persistent floating action button in bottom-right corner on all pages for quick song sharing access
-- **My Posts Page**: Created dedicated `/my-posts` page showing user's posted songs with built-in edit functionality
-- **My Likes Page**: Created dedicated `/my-likes` page displaying all songs the user has liked
-- **Profile Menu Navigation**: Updated profile dropdown to include "My Posts" and "My Likes" menu items for easy access to these new pages
-- **API Endpoints**: Added `/api/users/:userId/songs` to fetch user's posted songs with reaction counts
-- **AddSongDialog Enhancement**: Updated to support external state control via open/onOpenChange props for programmatic dialog control
-- **Bold Login Heading**: Made home page login screen heading more prominent and engaging
-- **End-to-End Tested**: All features verified working including navbar button, FAB, page navigation, and dialog opening
-- **Architect Approved**: All changes reviewed and approved
-
-### Previous Update: UI/UX Improvements - Edit Visibility, Modal Fixes & Profile Navigation ✅
-- **Edit Button Visibility**: Made edit button always visible on song cards (no longer requires hover) for better discoverability
-- **Modal Close Button Fix**: Removed duplicate close button from YouTube player modal (now uses single built-in Radix UI close button)
-- **Profile Menu Enhancement**: Added "My Posts" and "My Likes" navigation items to profile dropdown menu for easier access
-- **End-to-End Tested**: All UI fixes verified working including edit button visibility, single close button, and profile navigation
-- **Architect Approved**: All changes reviewed and approved
-
-### Previous Update: Trademark Branding, Auth Gates, Tag Cloud & Comprehensive Seed Data ✅
-- **Trademark Branding**: Added IsaiToday™ symbol throughout the app (navbar, pages, meta tags, documentation)
-- **Authentication Gates**: Restricted Discover and Profile pages to authenticated users with branded login CTAs
-- **Consolidated Login**: Removed separate sign-in button from navbar; login only via page-level prompts (auth dropdown shown when logged in)
-- **Visual Tag Cloud**: Created TagCloud component with backend endpoint (`/api/tags/cloud`) aggregating tag usage counts via SQL
-- **Tag Filtering**: Integrated tag cloud into Discover page with functional filtering that controls song grid display
-- **Comprehensive Seed Data**: Seeded database with 50 curated Indian songs spanning Hindi, Tamil, Telugu, Malayalam with albums, artists, tags, and personal stories
-- **Type Safety Fixes**: Fixed TypeScript type inconsistencies (null vs undefined) for story fields across Home, Discover, and Profile pages
-- **Enhanced Profile Gate**: Added branded login CTA to Profile page for consistency with Discover
-- **End-to-End Tested**: All features verified working including auth flows, tag cloud interaction, player navigation, and story display
-- **Architect Approved**: All changes reviewed and approved with comprehensive documentation updates
-
-### Previous Update: Personalized YouTube Player with Story & Metadata ✅
-- **Enhanced Player Modal**: Click any song to open a rich player showing the YouTube video alongside the user's personal story
-- **Story Display**: User avatar, name, and their full story about the song prominently displayed in highlighted box
-- **Complete Metadata**: Shows all song info including album, language, artists, and tags in the player
-- **Navigation**: Next/Previous buttons to browse through songs without closing the player - seamlessly updates video, story, and metadata
-- **User API**: Added `/api/users/:userId` endpoint to fetch user profiles for story attribution
-- **Data Flow**: `/api/feed` and `/api/discover` now include stories; pages pass stories through to components
-- **State Management**: Centralized player state in FeedCarousel and DiscoverGrid for proper navigation
-- **Personalization Focus**: The player emphasizes the personal connection - who shared the song and why they love it
-- **End-to-End Tested**: All features verified working including story display and navigation
-
-### Previous Update: YouTube Playback & Enhanced Song Posting
-- **YouTube Player**: Click any song thumbnail or play button to watch/listen in a modal player with autoplay
-- **Interactive Thumbnails**: Hover effects with image zoom and overlay darkening for better UX
-- **Album Field**: Users can add album names with autocomplete suggestions from existing albums
-- **Language Field**: Users can specify song language with autocomplete suggestions
-- **Multi-Artist Support**: Users can add multiple artists to a song using chip-based multi-select UI
-- **Tags System**: Users must add at least one tag to categorize songs (required field)
-- **Auto-creation**: Album, language, artist, and tag entries are automatically created if they don't exist
-- **Database Schema**: Added `albums`, `languages`, `artists` tables with `songArtists` and `songTags` junction tables
-- **Autocomplete APIs**: `/api/albums/search`, `/api/languages/search`, `/api/artists/search` endpoints
-- **Validation**: Added proper validation and duplicate-handling for all linking operations
-- **End-to-End Tested**: All features tested with Playwright and architect-approved
-
-### Previous Updates
-- Implemented complete backend API with PostgreSQL database and Drizzle ORM
-- Integrated Replit Auth for Google and email login
-- Connected all frontend pages to backend APIs
-- Implemented Song of the Day feature with random assignment
-- Built social reactions system (likes) with aggregated counts
-- Created feed and discover pages with trending songs
-- Added user profile with liked songs display
-- Seeded database with classic Indian music (R D Burman, Kishore Kumar, A R Rahman, Ilaiyaraja)
-- Fixed CSS import ordering to resolve Vite warnings
-- Completed end-to-end testing of all major user flows
 
 ## System Architecture
 
 ### Frontend Architecture
-
-**Framework & Build System**
-- React with TypeScript using Vite as the build tool
-- Client-side routing via Wouter (lightweight alternative to React Router)
-- React Query (@tanstack/react-query) for server state management and data fetching
-
-**UI Component System**
-- Radix UI primitives for accessible, unstyled components
-- shadcn/ui component library built on top of Radix
-- Tailwind CSS for styling with custom design tokens
-- Design system follows Spotify × Notion aesthetic with dark mode, glassmorphism effects, and gradient accents
-
-**State Management**
-- React Query handles all server state (songs, playlists, reactions, user data)
-- Local component state for UI interactions
-- Custom hooks for authentication (`use-auth`) and responsive design (`use-mobile`)
-
-**Key Pages**
-- Home: Song of the Day feature with friend activity feed and trending songs
-- Discover: Grid-based exploration with tag filtering and poster attribution
-- My Posts: Dedicated page showing user's posted songs with edit capability
-- My Likes: Dedicated page displaying all songs the user has liked with poster links
-- Profile: User stats, liked songs, and playlist management
-- User Profile (`/user/:userId`): Public profile showing any user's posted and liked songs
-- Auth: Login/registration (currently OAuth-based via Replit)
+- **Framework & Build System**: React with TypeScript, Vite, and Wouter for client-side routing.
+- **UI Component System**: Radix UI primitives, shadcn/ui, and Tailwind CSS, adhering to a Spotify × Notion dark-mode aesthetic with glassmorphism and gradient accents.
+- **State Management**: React Query for server state, local component state for UI, and custom hooks for authentication and responsiveness.
+- **Key Pages**: Home (Song of the Day, feed, trending), Discover (grid with tag filtering), My Posts, My Likes, User Profile, and Auth.
 
 ### Backend Architecture
-
-**Server Framework**
-- Express.js with TypeScript running on Node.js
-- ESM (ES Modules) throughout the codebase
-- Session-based authentication using Passport.js with OpenID Connect
-
-**API Design**
-- RESTful endpoints under `/api/*`
-- Key routes:
-  - `/api/auth/user` - Current user session
-  - `/api/song-of-day` - Daily song recommendation
-  - `/api/feed` - Friend activity feed
-  - `/api/discover` - Trending songs with poster (song sharer) information
-  - `/api/songs` - Song CRUD operations with album/language support
-  - `/api/songs/:songId/artists` - Link artists to songs
-  - `/api/songs/:songId/tags` - Link tags to songs
-  - `/api/playlists` - Playlist management
-  - `/api/reactions` - Like/reaction tracking
-  - `/api/users/:userId` - Fetch user profiles (public endpoint)
-  - `/api/users/:userId/songs` - Fetch user's posted songs with reaction counts
-  - `/api/users/:userId/reactions` - Fetch user's liked songs with poster information
-  - `/api/albums/search` - Autocomplete for album names
-  - `/api/languages/search` - Autocomplete for languages
-  - `/api/artists/search` - Autocomplete for artist names
-  - `/api/artists` - Create or retrieve artists
-  - `/api/tags` - Tag management
-  - `/api/tags/cloud` - Tag usage aggregation for tag cloud
-
-**Authentication & Sessions**
-- Replit Auth using OpenID Connect (OIDC) for user authentication
-- Passport.js strategy for session management
-- PostgreSQL-backed session store (connect-pg-simple)
-- 7-day session TTL with secure, httpOnly cookies
-
-**Data Access Layer**
-- Storage abstraction pattern in `server/storage.ts`
-- All database operations go through the storage interface
-- Supports operations for users, songs, reactions, playlists, tags, and song-of-the-day
+- **Server Framework**: Express.js with TypeScript on Node.js (ESM).
+- **API Design**: RESTful endpoints (`/api/*`) for authentication, songs, feeds, reactions, playlists, user profiles, and autocomplete search.
+- **Authentication & Sessions**: Replit Auth (OpenID Connect) via Passport.js for session management, with PostgreSQL-backed session store.
+- **Data Access Layer**: Abstracted storage layer (`server/storage.ts`) for all database operations.
 
 ### Data Storage
+- **Database**: PostgreSQL via Neon serverless driver, using Drizzle ORM for type-safe queries and schema management.
+- **Schema Design**: Tables for `users`, `songs`, `albums`, `languages`, `artists`, `songArtists`, `songStories`, `reactions`, `playlists`, `playlistSongs`, `tags`, `songTags`, `songOfTheDay`, and `sessions`.
+- **Database Migrations**: Drizzle Kit for schema migrations.
 
-**Database**
-- PostgreSQL via Neon serverless driver (@neondatabase/serverless)
-- Drizzle ORM for type-safe database queries and schema management
-- WebSocket connection pooling for serverless compatibility
+## External Dependencies
 
-**Schema Design**
-- `users` - User profiles with OAuth data (id, email, firstName, lastName, profileImageUrl)
-- `songs` - Song metadata (id, youtubeId, title, artist, album, language, thumbnail, addedBy, createdAt)
-- `albums` - Album names for autocomplete and organization
-- `languages` - Language names for autocomplete and filtering
-- `artists` - Artist names for multi-artist support
-- `songArtists` - Many-to-many join table linking songs to multiple artists
-- `songStories` - User stories/descriptions for songs (many-to-many user-song relationship)
-- `reactions` - User likes/reactions to songs (type field for future reaction types)
-- `playlists` - User-created playlists
-- `playlistSongs` - Many-to-many join table with ordering
-- `tags` - Hashtags for categorizing songs
-- `songTags` - Many-to-many song-tag relationship
-- `songOfTheDay` - Tracks daily song assignments per user
-- `sessions` - Session storage for authentication
-
-**Database Migrations**
-- Drizzle Kit for schema migrations
-- Migration files stored in `/migrations`
-- Push-based workflow (`db:push`) for schema synchronization
-
-### External Dependencies
-
-**YouTube Integration**
-- YouTube video ID extraction from URLs (supports multiple URL formats)
-- Embedded YouTube player via iframe
-- Thumbnail URLs using YouTube's image API (`img.youtube.com`)
-- Note: Full YouTube Data API v3 integration planned but currently using basic URL patterns for MVP
-
-**Authentication Provider**
-- Replit Auth (OpenID Connect)
-- Configured via environment variables (ISSUER_URL, REPL_ID, SESSION_SECRET)
-- Supports Replit-hosted deployments with automatic domain configuration
-
-**Development Tools**
-- Replit-specific plugins for hot module replacement and error overlays
-- Vite dev server with middleware mode for Express integration
-- Development banner and Cartographer for Replit environment
-
-**Session Storage**
-- PostgreSQL for persistent session storage
-- Auto-creation of session tables via connect-pg-simple
-
-**Database Seeding**
-- Initial seed data focused on Indian music (R D Burman, Kishore Kumar, A R Rahman, Ilaiyaraja)
-- Pre-populated tags and song metadata for demo purposes
-- Seed function creates tags, songs, and sample stories
+- **YouTube Integration**: Extracts video IDs from URLs, embeds YouTube player via iframe, and uses YouTube's image API for thumbnails. Automatic metadata fetching from YouTube Data API is implemented for song submission.
+- **Authentication Provider**: Replit Auth (OpenID Connect) for user authentication.
+- **Session Storage**: PostgreSQL for persistent session data.
+- **Development Tools**: Replit-specific plugins, Vite dev server, Cartographer.
