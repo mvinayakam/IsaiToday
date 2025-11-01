@@ -50,7 +50,14 @@ async function getAccessToken() {
 // Always call this function again to get a fresh client.
 async function getUncachableYouTubeClient() {
   const accessToken = await getAccessToken();
-  return google.youtube({ version: 'v3', auth: accessToken });
+  
+  // Create an OAuth2 client with the access token
+  const oauth2Client = new google.auth.OAuth2();
+  oauth2Client.setCredentials({
+    access_token: accessToken,
+  });
+  
+  return google.youtube({ version: 'v3', auth: oauth2Client });
 }
 
 export function extractYouTubeId(url: string): string | null {
