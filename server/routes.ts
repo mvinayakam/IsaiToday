@@ -2,7 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
-import { insertSongSchema, insertSongStorySchema, insertReactionSchema, insertPlaylistSchema, insertPlaylistSongSchema, insertTagSchema, insertAlbumSchema, insertLanguageSchema, insertArtistSchema, insertCommentSchema, songs, songStories, reactions, users, tags, songTags, comments, type InsertSong } from "@shared/schema";
+import { insertSongSchema, insertSongStorySchema, insertReactionSchema, insertPlaylistSchema, insertPlaylistSongSchema, insertTagSchema, insertAlbumSchema, insertLanguageSchema, insertArtistSchema, insertCommentSchema, songs, songStories, reactions, users, tags, songTags, comments, userMentions, type InsertSong } from "@shared/schema";
 import { seedDatabase } from "./seed";
 import { db } from "./db";
 import { eq, desc, sql, and } from "drizzle-orm";

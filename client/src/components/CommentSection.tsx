@@ -71,7 +71,7 @@ export function CommentSection({ songId, currentUserId }: CommentSectionProps) {
   // Create comment mutation
   const createCommentMutation = useMutation({
     mutationFn: async (commentContent: string) => {
-      return await apiRequest(`/api/songs/${songId}/comments`, "POST", {
+      return await apiRequest("POST", `/api/songs/${songId}/comments`, {
         content: commentContent,
       });
     },
@@ -95,7 +95,7 @@ export function CommentSection({ songId, currentUserId }: CommentSectionProps) {
   // Delete comment mutation
   const deleteCommentMutation = useMutation({
     mutationFn: async (commentId: string) => {
-      return await apiRequest(`/api/comments/${commentId}`, "DELETE");
+      return await apiRequest("DELETE", `/api/comments/${commentId}`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/songs", songId, "comments"] });
@@ -295,7 +295,7 @@ export function CommentSection({ songId, currentUserId }: CommentSectionProps) {
                     <Button
                       size="icon"
                       variant="ghost"
-                      className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                      className="h-6 w-6 ml-auto"
                       onClick={() => deleteCommentMutation.mutate(comment.id)}
                       disabled={deleteCommentMutation.isPending}
                       data-testid={`button-delete-comment-${comment.id}`}
