@@ -59,7 +59,56 @@ export default function AddSongDialog({ trigger, open: externalOpen, onOpenChang
   const [tagSuggestions, setTagSuggestions] = useState<Tag[]>([]);
   
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isFetchingMetadata, setIsFetchingMetadata] = useState(false);
   const { toast } = useToast();
+
+  // Automatically fetch metadata when YouTube URL changes
+  useEffect(() => {
+    const fetchMetadata = async () => {
+      const youtubeId = extractYouTubeId(youtubeUrl);
+      if (!youtubeId) return;
+
+      setIsFetchingMetadata(true);
+      try {
+        const response = await fetch(`/api/youtube/metadata?url=${encodeURIComponent(youtubeUrl)}`);
+        if (!response.ok) {
+          throw new Error('Failed to fetch metadata');
+        }
+        
+        const metadata = await response.json();
+        
+        // Only auto-fill if fields are empty
+        if (!title && metadata.title) {
+          setTitle(metadata.title);
+        }
+        if (selectedArtists.length === 0 && metadata.artist) {
+          setSelectedArtists([metadata.artist]);
+        }
+        if (!album && metadata.album) {
+          setAlbum(metadata.album);
+        }
+
+        toast({
+          title: "Metadata loaded!",
+          description: "We've automatically filled in the song details from YouTube",
+        });
+      } catch (error) {
+        console.error('Error fetching YouTube metadata:', error);
+        // Silently fail - user can still manually enter data
+      } finally {
+        setIsFetchingMetadata(false);
+      }
+    };
+
+    // Debounce the fetch to avoid too many API calls
+    const timeoutId = setTimeout(() => {
+      if (youtubeUrl) {
+        fetchMetadata();
+      }
+    }, 500);
+
+    return () => clearTimeout(timeoutId);
+  }, [youtubeUrl]);
 
   // Fetch album suggestions
   useEffect(() => {
@@ -239,7 +288,14 @@ export default function AddSongDialog({ trigger, open: externalOpen, onOpenChang
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="youtube-url">YouTube URL *</Label>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="youtube-url">YouTube URL *</Label>
+              {isFetchingMetadata && (
+                <span className="text-xs text-muted-foreground" data-testid="text-fetching-metadata">
+                  Loading metadata...
+                </span>
+              )}
+            </div>
             <Input
               id="youtube-url"
               type="text"
@@ -247,6 +303,7 @@ export default function AddSongDialog({ trigger, open: externalOpen, onOpenChang
               value={youtubeUrl}
               onChange={(e) => setYoutubeUrl(e.target.value)}
               data-testid="input-youtube-url"
+              disabled={isFetchingMetadata}
             />
           </div>
           
