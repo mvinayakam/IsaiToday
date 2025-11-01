@@ -3,7 +3,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useState } from "react";
 import { Link } from "wouter";
-import type { Song, User } from "@shared/schema";
+import YouTubePlayerDialog from "./YouTubePlayerDialog";
+import type { Song, User, SongStory } from "@shared/schema";
 
 interface SongOfTheDayProps {
   song: Song;
@@ -15,6 +16,8 @@ interface SongOfTheDayProps {
   onLike?: () => void;
   onAddToPlaylist?: () => void;
   onShare?: () => void;
+  currentUserId?: string;
+  storyObj?: SongStory;
 }
 
 export default function SongOfTheDay({
@@ -26,11 +29,14 @@ export default function SongOfTheDay({
   isLiked = false,
   onLike,
   onAddToPlaylist,
-  onShare
+  onShare,
+  currentUserId,
+  storyObj
 }: SongOfTheDayProps) {
   const { youtubeId, title, artist } = song;
   const [liked, setLiked] = useState(isLiked);
   const [likeCount, setLikeCount] = useState(likes);
+  const [playerOpen, setPlayerOpen] = useState(false);
 
   const handleLike = () => {
     setLiked(!liked);
@@ -38,7 +44,11 @@ export default function SongOfTheDay({
     onLike?.();
   };
 
-  const embedUrl = `https://www.youtube.com/embed/${youtubeId}?controls=1&modestbranding=1`;
+  const handlePlay = () => {
+    setPlayerOpen(true);
+  };
+
+  const thumbnailUrl = `https://img.youtube.com/vi/${youtubeId}/maxresdefault.jpg`;
 
   return (
     <div className="max-w-4xl mx-auto py-12 md:py-20 px-4" data-testid="section-song-of-day">
@@ -71,18 +81,44 @@ export default function SongOfTheDay({
         )}
       </div>
 
+      <YouTubePlayerDialog
+        open={playerOpen}
+        onOpenChange={setPlayerOpen}
+        youtubeId={youtubeId}
+        title={title}
+        song={song}
+        story={storyObj}
+        user={poster}
+        artists={[artist]}
+        tags={tags}
+        currentUserId={currentUserId}
+      />
+
       <div className="backdrop-blur-md bg-card/50 border border-white/10 rounded-2xl p-6 md:p-12 shadow-xl">
-        <div className="aspect-video rounded-xl overflow-hidden mb-6 bg-muted">
-          <iframe
-            width="100%"
-            height="100%"
-            src={embedUrl}
-            title={title}
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-            allowFullScreen
-            className="w-full h-full"
-            data-testid="iframe-youtube"
+        <div 
+          className="aspect-video rounded-xl overflow-hidden mb-6 bg-muted cursor-pointer group relative"
+          onClick={handlePlay}
+          data-testid="thumbnail-sotd"
+        >
+          <img 
+            src={thumbnailUrl} 
+            alt={title}
+            className="w-full h-full object-cover transition-transform duration-200 group-hover:scale-105"
           />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-200" />
+          <Button
+            size="icon"
+            variant="default"
+            className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-16 h-16 transition-transform duration-200 group-hover:scale-110"
+            onClick={(e) => {
+              e.stopPropagation();
+              handlePlay();
+            }}
+            data-testid="button-play-sotd"
+          >
+            <Play className="w-8 h-8" fill="currentColor" />
+          </Button>
         </div>
 
         {tags.length > 0 && (

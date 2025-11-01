@@ -141,6 +141,7 @@ export default function Home() {
           onLike={() => handleLikeSong(songOfDayData.song.id)}
           onAddToPlaylist={() => console.log('Add to playlist')}
           onShare={() => console.log('Share SOTD')}
+          currentUserId={user?.id}
         />
       )}
 

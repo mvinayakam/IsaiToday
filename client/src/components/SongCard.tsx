@@ -92,12 +92,12 @@ export default function SongCard({
 
   return (
     <div 
-      className="min-w-[240px] max-w-[320px] rounded-xl overflow-hidden backdrop-blur-md bg-card/50 border border-white/10 hover-elevate transition-all duration-200"
+      className="min-w-[240px] max-w-[320px] rounded-xl overflow-hidden backdrop-blur-md bg-card/50 border border-white/10 hover-elevate transition-all duration-200 cursor-pointer"
       data-testid={`card-song-${song.youtubeId}`}
+      onClick={handlePlay}
     >
       <div 
-        className="relative aspect-video rounded-t-xl overflow-hidden bg-muted cursor-pointer group"
-        onClick={handlePlay}
+        className="relative aspect-video rounded-t-xl overflow-hidden bg-muted group"
         data-testid={`thumbnail-${song.youtubeId}`}
       >
         <img 
@@ -215,7 +215,10 @@ export default function SongCard({
             size="sm"
             variant="ghost"
             className="gap-1.5 px-2"
-            onClick={handleLike}
+            onClick={(e) => {
+              e.stopPropagation();
+              handleLike();
+            }}
             data-testid={`button-like-${song.youtubeId}`}
           >
             <Heart className={`w-4 h-4 ${liked ? 'fill-primary text-primary' : ''}`} />
@@ -229,7 +232,10 @@ export default function SongCard({
             size="sm"
             variant="ghost"
             className="ml-auto px-2"
-            onClick={onShare}
+            onClick={(e) => {
+              e.stopPropagation();
+              onShare?.();
+            }}
             data-testid={`button-share-${song.youtubeId}`}
           >
             <Share2 className="w-4 h-4" />
