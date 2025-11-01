@@ -6,6 +6,7 @@ import { insertSongSchema, insertSongStorySchema, insertReactionSchema, insertPl
 import { seedDatabase } from "./seed";
 import { db } from "./db";
 import { eq, desc, sql, and } from "drizzle-orm";
+import { extractYouTubeId, fetchYouTubeMetadata } from "./youtube";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Auth middleware
@@ -357,6 +358,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error adding song to playlist:", error);
       res.status(500).json({ message: "Failed to add song to playlist" });
+    }
+  });
+
+  // YouTube metadata endpoint
+  app.get('/api/youtube/metadata', async (req, res) => {
+    try {
+      const url = req.query.url as string;
+      if (!url) {
+        return res.status(400).json({ message: "URL parameter is required" });
+      }
+
+      const youtubeId = extractYouTubeId(url);
+      if (!youtubeId) {
+        return res.status(400).json({ message: "Invalid YouTube URL" });
+      }
+
+      const metadata = await fetchYouTubeMetadata(youtubeId);
+      if (!metadata) {
+        return res.status(404).json({ message: "Video not found or metadata unavailable" });
+      }
+
+      res.json(metadata);
+    } catch (error) {
+      console.error("Error fetching YouTube metadata:", error);
+      res.status(500).json({ message: "Failed to fetch YouTube metadata" });
     }
   });
 
