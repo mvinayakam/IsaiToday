@@ -341,6 +341,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
             storyId: null,
             mentionedUserId: matchedUser.id,
           });
+          
+          // Create notification for the mentioned user
+          await storage.createNotification({
+            userId: matchedUser.id,
+            type: 'mention',
+            commentId: comment.id,
+            songId: req.params.songId,
+            isRead: false,
+          });
+          
           processedMentions.add(matchedUser.id);
         }
       }
