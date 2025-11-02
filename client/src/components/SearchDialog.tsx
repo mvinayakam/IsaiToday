@@ -26,7 +26,7 @@ export default function SearchDialog({ open, onOpenChange }: SearchDialogProps) 
   const [searchQuery, setSearchQuery] = useState("");
 
   // Search songs
-  const { data: songs = [] } = useQuery<Song[]>({
+  const { data: songs = [], isFetching: isFetchingSongs } = useQuery<Song[]>({
     queryKey: ['/api/songs/search', searchQuery],
     queryFn: async () => {
       if (!searchQuery || searchQuery.trim().length === 0) {
@@ -40,7 +40,7 @@ export default function SearchDialog({ open, onOpenChange }: SearchDialogProps) 
   });
 
   // Search users
-  const { data: users = [] } = useQuery<UserType[]>({
+  const { data: users = [], isFetching: isFetchingUsers } = useQuery<UserType[]>({
     queryKey: ['/api/users/search', searchQuery],
     queryFn: async () => {
       if (!searchQuery || searchQuery.trim().length === 0) {
@@ -87,7 +87,9 @@ export default function SearchDialog({ open, onOpenChange }: SearchDialogProps) 
             <CommandEmpty>
               {searchQuery.trim().length === 0 
                 ? "Type to search..." 
-                : "No results found."}
+                : (isFetchingSongs || isFetchingUsers)
+                  ? "Searching..."
+                  : "No results found."}
             </CommandEmpty>
             
             {songs.length > 0 && (
