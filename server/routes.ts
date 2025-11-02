@@ -27,6 +27,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Search users (must come before /api/users/:userId)
+  app.get('/api/users/search', async (req, res) => {
+    try {
+      const query = req.query.q as string;
+      if (!query || query.length < 2) {
+        return res.json([]);
+      }
+      
+      const users = await storage.searchUsers(query);
+      res.json(users);
+    } catch (error) {
+      console.error("Error searching users:", error);
+      res.status(500).json({ message: "Failed to search users" });
+    }
+  });
+
   // Get user by ID (for displaying story authors)
   app.get('/api/users/:userId', async (req, res) => {
     try {
@@ -42,6 +58,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Song routes
+  app.get('/api/songs/search', async (req, res) => {
+    try {
+      const query = req.query.q as string;
+      if (!query || query.trim().length === 0) {
+        return res.json([]);
+      }
+      const songs = await storage.searchSongs(query);
+      res.json(songs);
+    } catch (error) {
+      console.error("Error searching songs:", error);
+      res.status(500).json({ message: "Failed to search songs" });
+    }
+  });
+
   app.get('/api/songs', async (req, res) => {
     try {
       const allSongs = await storage.getAllSongs();
@@ -382,22 +412,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error deleting comment:", error);
       res.status(500).json({ message: "Failed to delete comment" });
-    }
-  });
-
-  // Search users for @mentions
-  app.get('/api/users/search', async (req, res) => {
-    try {
-      const query = req.query.q as string;
-      if (!query || query.length < 2) {
-        return res.json([]);
-      }
-      
-      const users = await storage.searchUsers(query);
-      res.json(users);
-    } catch (error) {
-      console.error("Error searching users:", error);
-      res.status(500).json({ message: "Failed to search users" });
     }
   });
 

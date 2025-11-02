@@ -14,11 +14,11 @@ import AddSongDialog from "@/components/AddSongDialog";
 import { useState } from "react";
 
 interface NavbarProps {
-  onSearchChange?: (value: string) => void;
+  onSearchClick?: () => void;
 }
 
 export default function Navbar({ 
-  onSearchChange,
+  onSearchClick,
 }: NavbarProps) {
   const { user, isAuthenticated } = useAuth();
   const [addSongOpen, setAddSongOpen] = useState(false);
@@ -35,12 +35,13 @@ export default function Navbar({
 
         <div className="hidden md:flex flex-1 max-w-md mx-8">
           <div className="relative w-full">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
             <Input
-              type="search"
-              placeholder="Search songs, artists, or tags..."
-              className="pl-10 bg-card/50 border-white/10"
-              onChange={(e) => onSearchChange?.(e.target.value)}
+              type="text"
+              placeholder="Search songs, artists, or users..."
+              className="pl-10 bg-card/50 border-white/10 cursor-pointer"
+              onClick={onSearchClick}
+              readOnly
               data-testid="input-search"
             />
           </div>

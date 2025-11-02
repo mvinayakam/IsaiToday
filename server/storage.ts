@@ -59,6 +59,7 @@ export interface IStorage {
   createSong(song: InsertSong): Promise<Song>;
   updateSong(id: string, updates: Partial<InsertSong>): Promise<Song>;
   getAllSongs(): Promise<Song[]>;
+  searchSongs(query: string): Promise<Song[]>;
   
   // Song story operations
   getSongStory(songId: string, userId: string): Promise<SongStory | undefined>;
@@ -183,6 +184,27 @@ export class DatabaseStorage implements IStorage {
 
   async getAllSongs(): Promise<Song[]> {
     return await db.select().from(songs).orderBy(desc(songs.createdAt));
+  }
+
+  async searchSongs(query: string): Promise<Song[]> {
+    const searchPattern = `%${query}%`;
+    const results = await db
+      .selectDistinct({ song: songs })
+      .from(songs)
+      .leftJoin(songTags, eq(songs.id, songTags.songId))
+      .leftJoin(tags, eq(songTags.tagId, tags.id))
+      .where(
+        sql`(
+          ${songs.title} ILIKE ${searchPattern} 
+          OR ${songs.artist} ILIKE ${searchPattern} 
+          OR ${songs.album} ILIKE ${searchPattern}
+          OR ${tags.name} ILIKE ${searchPattern}
+        )`
+      )
+      .orderBy(desc(songs.createdAt))
+      .limit(20);
+    
+    return results.map(r => r.song);
   }
 
   // Song story operations
@@ -483,11 +505,17 @@ export class DatabaseStorage implements IStorage {
   }
 
   async searchUsers(query: string): Promise<User[]> {
+    const searchPattern = `%${query}%`;
     return await db
       .select()
       .from(users)
       .where(
-        sql`${users.firstName} || ' ' || ${users.lastName} ILIKE ${`%${query}%`}`
+        sql`(
+          ${users.firstName} ILIKE ${searchPattern} 
+          OR ${users.lastName} ILIKE ${searchPattern}
+          OR ${users.email} ILIKE ${searchPattern}
+          OR (${users.firstName} || ' ' || ${users.lastName}) ILIKE ${searchPattern}
+        )`
       )
       .limit(10);
   }
