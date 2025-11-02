@@ -11,6 +11,7 @@ import {
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import AddSongDialog from "@/components/AddSongDialog";
+import NotificationsBell from "@/components/NotificationsBell";
 import { useState } from "react";
 
 interface NavbarProps {
@@ -58,6 +59,8 @@ export default function Navbar({
                 <Plus className="w-4 h-4 md:mr-2" />
                 <span className="hidden md:inline">Add Song</span>
               </Button>
+              
+              <NotificationsBell />
               
               {user && (
                 <DropdownMenu>
