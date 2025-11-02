@@ -267,3 +267,24 @@ export const insertUserMentionSchema = createInsertSchema(userMentions).omit({
 });
 export type InsertUserMention = z.infer<typeof insertUserMentionSchema>;
 export type UserMention = typeof userMentions.$inferSelect;
+
+// Notifications table
+export const notifications = pgTable("notifications", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").references(() => users.id, { onDelete: "cascade" }).notNull(),
+  type: varchar("type").notNull(), // "mention", "reaction", etc.
+  commentId: varchar("comment_id").references(() => comments.id, { onDelete: "cascade" }),
+  songId: varchar("song_id").references(() => songs.id, { onDelete: "cascade" }),
+  isRead: boolean("is_read").default(false).notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_notifications_user").on(table.userId),
+  index("idx_notifications_read").on(table.userId, table.isRead),
+]);
+
+export const insertNotificationSchema = createInsertSchema(notifications).omit({
+  id: true,
+  createdAt: true,
+});
+export type InsertNotification = z.infer<typeof insertNotificationSchema>;
+export type Notification = typeof notifications.$inferSelect;
