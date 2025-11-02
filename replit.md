@@ -8,6 +8,11 @@ IsaiToday is a full-stack social discovery platform for sharing and exploring so
 - **User Tagging**: @mention autocomplete functionality allows users to easily tag others in comments
 - **Interactive Comments**: Mentions are displayed as clickable links to user profiles
 - **Comment Management**: Users can delete their own comments with a simple click
+- **Notifications System**: Users receive real-time notifications when mentioned in comments
+  - Bell icon in navbar displays unread notification count
+  - Dropdown menu shows all notifications with unread status
+  - Clicking notifications navigates to the related song and marks as read
+  - Auto-refreshes every 30 seconds to check for new notifications
 
 ## User Preferences
 Preferred communication style: Simple, everyday language.
@@ -28,7 +33,7 @@ Preferred communication style: Simple, everyday language.
 
 ### Data Storage
 - **Database**: PostgreSQL via Neon serverless driver, using Drizzle ORM for type-safe queries and schema management.
-- **Schema Design**: Tables for `users`, `songs`, `albums`, `languages`, `artists`, `songArtists`, `songStories`, `reactions`, `playlists`, `playlistSongs`, `tags`, `songTags`, `songOfTheDay`, `comments`, `userMentions`, and `sessions`.
+- **Schema Design**: Tables for `users`, `songs`, `albums`, `languages`, `artists`, `songArtists`, `songStories`, `reactions`, `playlists`, `playlistSongs`, `tags`, `songTags`, `songOfTheDay`, `comments`, `userMentions`, `notifications`, and `sessions`.
 - **Database Migrations**: Drizzle Kit for schema migrations.
 
 ## External Dependencies
