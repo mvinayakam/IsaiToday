@@ -525,6 +525,7 @@ export class DatabaseStorage implements IStorage {
           OR ${users.lastName} ILIKE ${searchPattern}
           OR ${users.email} ILIKE ${searchPattern}
           OR (${users.firstName} || ' ' || ${users.lastName}) ILIKE ${searchPattern}
+          OR (${users.firstName} || ${users.lastName}) ILIKE ${searchPattern}
         )`
       )
       .limit(10);
