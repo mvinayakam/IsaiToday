@@ -296,7 +296,7 @@ export default function AddSongDialog({ trigger, open: externalOpen, onOpenChang
           {trigger}
         </DialogTrigger>
       )}
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Add a Song</DialogTitle>
           <DialogDescription>
@@ -304,6 +304,7 @@ export default function AddSongDialog({ trigger, open: externalOpen, onOpenChang
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
+          {/* YouTube URL - Spanning across */}
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <Label htmlFor="youtube-url">YouTube URL *</Label>
@@ -323,186 +324,199 @@ export default function AddSongDialog({ trigger, open: externalOpen, onOpenChang
               disabled={isFetchingMetadata}
             />
           </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="title">Song Title *</Label>
-            <Input
-              id="title"
-              type="text"
-              placeholder="Enter song title"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              data-testid="input-title"
-            />
-          </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="album">Album</Label>
-            <Input
-              id="album"
-              type="text"
-              placeholder="Enter or select album name"
-              value={album}
-              onChange={(e) => setAlbum(e.target.value)}
-              data-testid="input-album"
-              list="album-suggestions"
-            />
-            {albumSuggestions.length > 0 && (
-              <datalist id="album-suggestions">
-                {albumSuggestions.map((alb) => (
-                  <option key={alb.id} value={alb.name} />
-                ))}
-              </datalist>
-            )}
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="language">Language</Label>
-            <Input
-              id="language"
-              type="text"
-              placeholder="Enter or select language"
-              value={language}
-              onChange={(e) => setLanguage(e.target.value)}
-              data-testid="input-language"
-              list="language-suggestions"
-            />
-            {languageSuggestions.length > 0 && (
-              <datalist id="language-suggestions">
-                {languageSuggestions.map((lang) => (
-                  <option key={lang.id} value={lang.name} />
-                ))}
-              </datalist>
-            )}
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="artist">Artists * (Add multiple)</Label>
-            <div className="flex gap-2">
-              <Input
-                id="artist"
-                type="text"
-                placeholder="Type artist name and press Enter"
-                value={artistInput}
-                onChange={(e) => setArtistInput(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    e.preventDefault();
-                    addArtist(artistInput);
-                  }
-                }}
-                data-testid="input-artist"
-                list="artist-suggestions"
-              />
-              <Button
-                type="button"
-                size="icon"
-                onClick={() => addArtist(artistInput)}
-                data-testid="button-add-artist"
-              >
-                <Plus className="w-4 h-4" />
-              </Button>
-            </div>
-            {artistSuggestions.length > 0 && (
-              <datalist id="artist-suggestions">
-                {artistSuggestions.map((art) => (
-                  <option key={art.id} value={art.name} />
-                ))}
-              </datalist>
-            )}
-            {selectedArtists.length > 0 && (
-              <div className="flex flex-wrap gap-2 mt-2">
-                {selectedArtists.map((artist) => (
-                  <Badge key={artist} variant="secondary" className="gap-1 pr-1" data-testid={`badge-artist-${artist}`}>
-                    <span>{artist}</span>
-                    <button
-                      type="button"
-                      className="ml-1 rounded-sm hover:bg-secondary-foreground/20 p-0.5"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        removeArtist(artist);
-                      }}
-                      data-testid={`button-remove-artist-${artist}`}
-                    >
-                      <X className="w-3 h-3" />
-                    </button>
-                  </Badge>
-                ))}
+          {/* Two Column Layout */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Left Column - Metadata */}
+            <div className="space-y-4">
+              <h3 className="text-sm font-semibold text-foreground">Song Metadata</h3>
+              
+              <div className="space-y-2">
+                <Label htmlFor="title">Song Title *</Label>
+                <Input
+                  id="title"
+                  type="text"
+                  placeholder="Enter song title"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  data-testid="input-title"
+                />
               </div>
-            )}
-          </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="tags">Tags * (Add at least one)</Label>
-            <div className="flex gap-2">
-              <Input
-                id="tags"
-                type="text"
-                placeholder="Type tag and press Enter"
-                value={tagInput}
-                onChange={(e) => setTagInput(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    e.preventDefault();
-                    addTag(tagInput);
-                  }
-                }}
-                data-testid="input-tag"
-                list="tag-suggestions"
-              />
-              <Button
-                type="button"
-                size="icon"
-                onClick={() => addTag(tagInput)}
-                data-testid="button-add-tag"
-              >
-                <Plus className="w-4 h-4" />
-              </Button>
-            </div>
-            {tagSuggestions.length > 0 && (
-              <datalist id="tag-suggestions">
-                {tagSuggestions.map((tag) => (
-                  <option key={tag.id} value={tag.name} />
-                ))}
-              </datalist>
-            )}
-            {selectedTags.length > 0 && (
-              <div className="flex flex-wrap gap-2 mt-2">
-                {selectedTags.map((tag) => (
-                  <Badge key={tag} variant="outline" className="gap-1 pr-1" data-testid={`badge-tag-${tag}`}>
-                    <span>{tag}</span>
-                    <button
-                      type="button"
-                      className="ml-1 rounded-sm hover:bg-muted p-0.5"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        removeTag(tag);
-                      }}
-                      data-testid={`button-remove-tag-${tag}`}
-                    >
-                      <X className="w-3 h-3" />
-                    </button>
-                  </Badge>
-                ))}
+              <div className="space-y-2">
+                <Label htmlFor="album">Album</Label>
+                <Input
+                  id="album"
+                  type="text"
+                  placeholder="Enter or select album name"
+                  value={album}
+                  onChange={(e) => setAlbum(e.target.value)}
+                  data-testid="input-album"
+                  list="album-suggestions"
+                />
+                {albumSuggestions.length > 0 && (
+                  <datalist id="album-suggestions">
+                    {albumSuggestions.map((alb) => (
+                      <option key={alb.id} value={alb.name} />
+                    ))}
+                  </datalist>
+                )}
               </div>
-            )}
+
+              <div className="space-y-2">
+                <Label htmlFor="language">Language</Label>
+                <Input
+                  id="language"
+                  type="text"
+                  placeholder="Enter or select language"
+                  value={language}
+                  onChange={(e) => setLanguage(e.target.value)}
+                  data-testid="input-language"
+                  list="language-suggestions"
+                />
+                {languageSuggestions.length > 0 && (
+                  <datalist id="language-suggestions">
+                    {languageSuggestions.map((lang) => (
+                      <option key={lang.id} value={lang.name} />
+                    ))}
+                  </datalist>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="artist">Artists * (Add multiple)</Label>
+                <div className="flex gap-2">
+                  <Input
+                    id="artist"
+                    type="text"
+                    placeholder="Type artist name and press Enter"
+                    value={artistInput}
+                    onChange={(e) => setArtistInput(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        addArtist(artistInput);
+                      }
+                    }}
+                    data-testid="input-artist"
+                    list="artist-suggestions"
+                  />
+                  <Button
+                    type="button"
+                    size="icon"
+                    onClick={() => addArtist(artistInput)}
+                    data-testid="button-add-artist"
+                  >
+                    <Plus className="w-4 h-4" />
+                  </Button>
+                </div>
+                {artistSuggestions.length > 0 && (
+                  <datalist id="artist-suggestions">
+                    {artistSuggestions.map((art) => (
+                      <option key={art.id} value={art.name} />
+                    ))}
+                  </datalist>
+                )}
+                {selectedArtists.length > 0 && (
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    {selectedArtists.map((artist) => (
+                      <Badge key={artist} variant="secondary" className="gap-1 pr-1" data-testid={`badge-artist-${artist}`}>
+                        <span>{artist}</span>
+                        <button
+                          type="button"
+                          className="ml-1 rounded-sm hover:bg-secondary-foreground/20 p-0.5"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            removeArtist(artist);
+                          }}
+                          data-testid={`button-remove-artist-${artist}`}
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      </Badge>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="tags">Tags * (Add at least one)</Label>
+                <div className="flex gap-2">
+                  <Input
+                    id="tags"
+                    type="text"
+                    placeholder="Type tag and press Enter"
+                    value={tagInput}
+                    onChange={(e) => setTagInput(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        addTag(tagInput);
+                      }
+                    }}
+                    data-testid="input-tag"
+                    list="tag-suggestions"
+                  />
+                  <Button
+                    type="button"
+                    size="icon"
+                    onClick={() => addTag(tagInput)}
+                    data-testid="button-add-tag"
+                  >
+                    <Plus className="w-4 h-4" />
+                  </Button>
+                </div>
+                {tagSuggestions.length > 0 && (
+                  <datalist id="tag-suggestions">
+                    {tagSuggestions.map((tag) => (
+                      <option key={tag.id} value={tag.name} />
+                    ))}
+                  </datalist>
+                )}
+                {selectedTags.length > 0 && (
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    {selectedTags.map((tag) => (
+                      <Badge key={tag} variant="outline" className="gap-1 pr-1" data-testid={`badge-tag-${tag}`}>
+                        <span>{tag}</span>
+                        <button
+                          type="button"
+                          className="ml-1 rounded-sm hover:bg-muted p-0.5"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            removeTag(tag);
+                          }}
+                          data-testid={`button-remove-tag-${tag}`}
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      </Badge>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Right Column - Story */}
+            <div className="space-y-4">
+              <h3 className="text-sm font-semibold text-foreground">Why You Love This Song</h3>
+              
+              <div className="space-y-2">
+                <Label htmlFor="story">Your Story *</Label>
+                <Textarea
+                  id="story"
+                  placeholder="Why do you love this song? What does it mean to you? Share your personal connection, memories, or feelings about this song..."
+                  value={story}
+                  onChange={(e) => setStory(e.target.value)}
+                  className="min-h-[400px]"
+                  data-testid="input-story"
+                />
+              </div>
+            </div>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="story">Your Story *</Label>
-            <Textarea
-              id="story"
-              placeholder="Why do you love this song? What does it mean to you?"
-              value={story}
-              onChange={(e) => setStory(e.target.value)}
-              className="min-h-[100px]"
-              data-testid="input-story"
-            />
-          </div>
-
-          <div className="flex justify-end gap-3">
+          <div className="flex justify-end gap-3 pt-4 border-t">
             <Button
               type="button"
               variant="outline"
