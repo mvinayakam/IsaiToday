@@ -7,6 +7,7 @@ import { seedDatabase } from "./seed";
 import { db } from "./db";
 import { eq, desc, sql, and } from "drizzle-orm";
 import { extractYouTubeId, fetchYouTubeMetadata } from "./youtube";
+import { z } from "zod";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Auth middleware
@@ -24,6 +25,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching user:", error);
       res.status(500).json({ message: "Failed to fetch user" });
+    }
+  });
+
+  // Update user profile
+  app.put('/api/auth/user', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      
+      // Validate input
+      const updateSchema = z.object({
+        firstName: z.string().trim().nullable().optional(),
+        lastName: z.string().trim().nullable().optional(),
+        profileImageUrl: z.string().url().nullable().optional().or(z.literal('')),
+      });
+      
+      const validated = updateSchema.parse(req.body);
+      
+      const updatedUser = await storage.updateUser(userId, {
+        firstName: validated.firstName === '' ? null : validated.firstName,
+        lastName: validated.lastName === '' ? null : validated.lastName,
+        profileImageUrl: validated.profileImageUrl === '' ? null : validated.profileImageUrl,
+      });
+      
+      res.json(updatedUser);
+    } catch (error: any) {
+      console.error("Error updating user:", error);
+      if (error.message === 'User not found') {
+        return res.status(404).json({ message: "User not found" });
+      }
+      res.status(500).json({ message: "Failed to update user profile" });
     }
   });
 

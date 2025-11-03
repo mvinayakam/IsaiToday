@@ -12,10 +12,16 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 
 interface CreatePlaylistDialogProps {
   trigger?: React.ReactNode;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
-export default function CreatePlaylistDialog({ trigger }: CreatePlaylistDialogProps) {
-  const [open, setOpen] = useState(false);
+export default function CreatePlaylistDialog({ trigger, open: externalOpen, onOpenChange: externalOnOpenChange }: CreatePlaylistDialogProps) {
+  const [internalOpen, setInternalOpen] = useState(false);
+  
+  // Use external state if provided, otherwise use internal state
+  const open = externalOpen !== undefined ? externalOpen : internalOpen;
+  const setOpen = externalOnOpenChange || setInternalOpen;
   const [title, setTitle] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();

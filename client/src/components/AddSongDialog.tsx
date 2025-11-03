@@ -296,14 +296,14 @@ export default function AddSongDialog({ trigger, open: externalOpen, onOpenChang
           {trigger}
         </DialogTrigger>
       )}
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
+      <DialogContent className="max-w-4xl max-h-[85vh] sm:max-h-[90vh] flex flex-col">
+        <DialogHeader className="shrink-0">
           <DialogTitle>Add a Song</DialogTitle>
           <DialogDescription>
             Share a song and tell us why you love it
           </DialogDescription>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4 overflow-y-auto flex-1 pr-2">
           {/* YouTube URL - Spanning across */}
           <div className="space-y-2">
             <div className="flex items-center justify-between">
@@ -509,7 +509,7 @@ export default function AddSongDialog({ trigger, open: externalOpen, onOpenChang
                   placeholder="Why do you love this song? What does it mean to you? Share your personal connection, memories, or feelings about this song..."
                   value={story}
                   onChange={(e) => setStory(e.target.value)}
-                  className="min-h-[400px]"
+                  className="min-h-[200px] sm:min-h-[300px] md:min-h-[400px]"
                   data-testid="input-story"
                 />
               </div>

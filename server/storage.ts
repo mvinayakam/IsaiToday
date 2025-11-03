@@ -55,6 +55,7 @@ export interface IStorage {
   // User operations (required for Replit Auth)
   getUser(id: string): Promise<User | undefined>;
   upsertUser(user: UpsertUser): Promise<User>;
+  updateUser(id: string, updates: Partial<{ firstName: string | null; lastName: string | null; profileImageUrl: string | null }>): Promise<User>;
 
   // Song operations
   getSong(id: string): Promise<Song | undefined>;
@@ -164,6 +165,23 @@ export class DatabaseStorage implements IStorage {
         },
       })
       .returning();
+    return user;
+  }
+
+  async updateUser(id: string, updates: Partial<{ firstName: string | null; lastName: string | null; profileImageUrl: string | null }>): Promise<User> {
+    const [user] = await db
+      .update(users)
+      .set({
+        ...updates,
+        updatedAt: new Date(),
+      })
+      .where(eq(users.id, id))
+      .returning();
+    
+    if (!user) {
+      throw new Error('User not found');
+    }
+    
     return user;
   }
 

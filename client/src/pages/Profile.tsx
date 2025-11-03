@@ -2,6 +2,8 @@ import ProfileSection from "@/components/ProfileSection";
 import FeedCarousel from "@/components/FeedCarousel";
 import PlaylistCard from "@/components/PlaylistCard";
 import CreatePlaylistDialog from "@/components/CreatePlaylistDialog";
+import EditProfileDialog from "@/components/EditProfileDialog";
+import { useState } from "react";
 import { useAuth, getLogoutUrl, getLoginUrl } from "@/hooks/use-auth";
 import { useQuery } from "@tanstack/react-query";
 import type { Reaction, Song, Playlist } from "@shared/schema";
@@ -16,6 +18,7 @@ interface ReactionWithSongAndCount {
 
 export default function Profile() {
   const { user, isAuthenticated } = useAuth();
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
 
   const { data: reactionsWithSongs = [], isLoading: reactionsLoading } = useQuery<ReactionWithSongAndCount[]>({
     queryKey: [`/api/users/${user?.id}/reactions`],
@@ -70,7 +73,7 @@ export default function Profile() {
             playlists: playlists.length,
             following: 0
           }}
-          onEditProfile={() => console.log('Edit profile')}
+          onEditProfile={() => setEditDialogOpen(true)}
           onLogout={() => window.location.href = getLogoutUrl()}
         />
       </div>
@@ -123,6 +126,14 @@ export default function Profile() {
           )}
         </div>
       </section>
+
+      <EditProfileDialog
+        open={editDialogOpen}
+        onOpenChange={setEditDialogOpen}
+        currentFirstName={user.firstName}
+        currentLastName={user.lastName}
+        currentProfileImageUrl={user.profileImageUrl}
+      />
     </div>
   );
 }

@@ -3,6 +3,8 @@ import FeedCarousel from "@/components/FeedCarousel";
 import PlaylistCard from "@/components/PlaylistCard";
 import AddSongDialog from "@/components/AddSongDialog";
 import CreatePlaylistDialog from "@/components/CreatePlaylistDialog";
+import AddToPlaylistDialog from "@/components/AddToPlaylistDialog";
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
 import type { Song, Playlist, Reaction, User, SongStory } from "@shared/schema";
@@ -45,6 +47,8 @@ function LoadingSkeleton() {
 export default function Home() {
   const { user, isAuthenticated, isLoading: authLoading } = useAuth();
   const { toast } = useToast();
+  const [playlistDialogOpen, setPlaylistDialogOpen] = useState(false);
+  const [selectedSong, setSelectedSong] = useState<{ id: string; title: string } | null>(null);
   
   const { data: songOfDayData, isLoading: sotdLoading } = useQuery<SongOfDayData>({
     queryKey: ['/api/song-of-day'],
@@ -86,6 +90,18 @@ export default function Home() {
         variant: "destructive",
       });
     }
+  };
+
+  const handleAddToPlaylist = (songId: string, songTitle: string) => {
+    if (!isAuthenticated) {
+      toast({
+        title: "Login required",
+        description: "Please log in to add songs to playlists",
+      });
+      return;
+    }
+    setSelectedSong({ id: songId, title: songTitle });
+    setPlaylistDialogOpen(true);
   };
 
   if (authLoading || sotdLoading) {
@@ -139,7 +155,7 @@ export default function Home() {
           tags={[]}
           likes={0}
           onLike={() => handleLikeSong(songOfDayData.song.id)}
-          onAddToPlaylist={() => console.log('Add to playlist')}
+          onAddToPlaylist={() => handleAddToPlaylist(songOfDayData.song.id, songOfDayData.song.title)}
           onShare={() => console.log('Share SOTD')}
           currentUserId={user?.id}
         />
@@ -207,6 +223,15 @@ export default function Home() {
             )}
           </div>
         </section>
+      )}
+
+      {selectedSong && (
+        <AddToPlaylistDialog
+          open={playlistDialogOpen}
+          onOpenChange={setPlaylistDialogOpen}
+          songId={selectedSong.id}
+          songTitle={selectedSong.title}
+        />
       )}
     </div>
   );
