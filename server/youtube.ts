@@ -11,6 +11,30 @@ interface YouTubeMetadata {
 
 let connectionSettings: any;
 
+// Get YouTube client - supports both custom API key and Replit integration
+async function getYouTubeClient() {
+  // Option 1: Use custom API key from secrets
+  const customApiKey = process.env.YOUTUBE_API_KEY;
+  if (customApiKey) {
+    console.log('[YouTube] Using custom API key from YOUTUBE_API_KEY secret');
+    return google.youtube({
+      version: 'v3',
+      auth: customApiKey,
+    });
+  }
+
+  // Option 2: Use Replit YouTube integration (OAuth)
+  console.log('[YouTube] Using Replit YouTube integration');
+  const accessToken = await getAccessToken();
+  
+  const oauth2Client = new google.auth.OAuth2();
+  oauth2Client.setCredentials({
+    access_token: accessToken,
+  });
+  
+  return google.youtube({ version: 'v3', auth: oauth2Client });
+}
+
 async function getAccessToken() {
   if (connectionSettings && connectionSettings.settings.expires_at && new Date(connectionSettings.settings.expires_at).getTime() > Date.now()) {
     return connectionSettings.settings.access_token;
@@ -43,21 +67,6 @@ async function getAccessToken() {
     throw new Error('YouTube not connected');
   }
   return accessToken;
-}
-
-// WARNING: Never cache this client.
-// Access tokens expire, so a new client must be created each time.
-// Always call this function again to get a fresh client.
-async function getUncachableYouTubeClient() {
-  const accessToken = await getAccessToken();
-  
-  // Create an OAuth2 client with the access token
-  const oauth2Client = new google.auth.OAuth2();
-  oauth2Client.setCredentials({
-    access_token: accessToken,
-  });
-  
-  return google.youtube({ version: 'v3', auth: oauth2Client });
 }
 
 export function extractYouTubeId(url: string): string | null {
@@ -95,7 +104,7 @@ export function getYouTubeEmbedUrl(youtubeId: string): string {
 export async function fetchYouTubeMetadata(youtubeId: string): Promise<YouTubeMetadata | null> {
   try {
     console.log('[YouTube] Fetching metadata for video:', youtubeId);
-    const youtube = await getUncachableYouTubeClient();
+    const youtube = await getYouTubeClient();
     
     const response = await youtube.videos.list({
       part: ['snippet'],
