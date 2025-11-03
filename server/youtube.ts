@@ -1,63 +1,26 @@
-// YouTube metadata fetching utility
-import { google } from 'googleapis';
+// YouTube metadata fetching utility using oEmbed API
 
 interface YouTubeMetadata {
   title: string;
   artist: string;
   thumbnail: string;
   album?: string;
-  description?: string;
 }
 
-let connectionSettings: any;
-
-async function getAccessToken() {
-  if (connectionSettings && connectionSettings.settings.expires_at && new Date(connectionSettings.settings.expires_at).getTime() > Date.now()) {
-    return connectionSettings.settings.access_token;
-  }
-  
-  const hostname = process.env.REPLIT_CONNECTORS_HOSTNAME
-  const xReplitToken = process.env.REPL_IDENTITY 
-    ? 'repl ' + process.env.REPL_IDENTITY 
-    : process.env.WEB_REPL_RENEWAL 
-    ? 'depl ' + process.env.WEB_REPL_RENEWAL 
-    : null;
-
-  if (!xReplitToken) {
-    throw new Error('X_REPLIT_TOKEN not found for repl/depl');
-  }
-
-  connectionSettings = await fetch(
-    'https://' + hostname + '/api/v2/connection?include_secrets=true&connector_names=youtube',
-    {
-      headers: {
-        'Accept': 'application/json',
-        'X_REPLIT_TOKEN': xReplitToken
-      }
-    }
-  ).then(res => res.json()).then(data => data.items?.[0]);
-
-  const accessToken = connectionSettings?.settings?.access_token || connectionSettings.settings?.oauth?.credentials?.access_token;
-
-  if (!connectionSettings || !accessToken) {
-    throw new Error('YouTube not connected');
-  }
-  return accessToken;
-}
-
-// WARNING: Never cache this client.
-// Access tokens expire, so a new client must be created each time.
-// Always call this function again to get a fresh client.
-async function getUncachableYouTubeClient() {
-  const accessToken = await getAccessToken();
-  
-  // Create an OAuth2 client with the access token
-  const oauth2Client = new google.auth.OAuth2();
-  oauth2Client.setCredentials({
-    access_token: accessToken,
-  });
-  
-  return google.youtube({ version: 'v3', auth: oauth2Client });
+interface OEmbedResponse {
+  title: string;
+  author_name: string;
+  author_url: string;
+  type: string;
+  height: number;
+  width: number;
+  version: string;
+  provider_name: string;
+  provider_url: string;
+  thumbnail_height: number;
+  thumbnail_width: number;
+  thumbnail_url: string;
+  html: string;
 }
 
 export function extractYouTubeId(url: string): string | null {
@@ -91,31 +54,25 @@ export function getYouTubeEmbedUrl(youtubeId: string): string {
   return `https://www.youtube.com/embed/${youtubeId}?controls=1&modestbranding=1`;
 }
 
-// Fetch metadata from YouTube Data API v3
+// Fetch metadata from YouTube oEmbed API (no API key required)
 export async function fetchYouTubeMetadata(youtubeId: string): Promise<YouTubeMetadata | null> {
   try {
-    const youtube = await getUncachableYouTubeClient();
+    const videoUrl = `https://www.youtube.com/watch?v=${youtubeId}`;
+    const oembedUrl = `https://www.youtube.com/oembed?url=${encodeURIComponent(videoUrl)}&format=json`;
     
-    const response = await youtube.videos.list({
-      part: ['snippet'],
-      id: [youtubeId],
-    });
-
-    if (!response.data.items || response.data.items.length === 0) {
+    const response = await fetch(oembedUrl);
+    
+    if (!response.ok) {
+      console.error(`oEmbed API returned status ${response.status}`);
       return null;
     }
 
-    const video = response.data.items[0];
-    const snippet = video.snippet;
-
-    if (!snippet) {
-      return null;
-    }
+    const data: OEmbedResponse = await response.json();
 
     // Extract title and try to parse artist from it
     // Common formats: "Artist - Title", "Title - Artist", "Title by Artist"
-    let title = snippet.title || '';
-    let artist = snippet.channelTitle || '';
+    let title = data.title || '';
+    let artist = data.author_name || '';
     let album: string | undefined = undefined;
 
     // Try to parse "Artist - Title" or "Title - Artist" format
@@ -126,10 +83,10 @@ export async function fetchYouTubeMetadata(youtubeId: string): Promise<YouTubeMe
       const part1 = dashMatch[1].trim();
       const part2 = dashMatch[2].trim();
       
-      if (snippet.channelTitle && part1.toLowerCase().includes(snippet.channelTitle.toLowerCase())) {
+      if (data.author_name && part1.toLowerCase().includes(data.author_name.toLowerCase())) {
         artist = part1;
         title = part2;
-      } else if (snippet.channelTitle && part2.toLowerCase().includes(snippet.channelTitle.toLowerCase())) {
+      } else if (data.author_name && part2.toLowerCase().includes(data.author_name.toLowerCase())) {
         artist = part2;
         title = part1;
       } else {
@@ -146,20 +103,11 @@ export async function fetchYouTubeMetadata(youtubeId: string): Promise<YouTubeMe
       }
     }
 
-    // Check description for album info
-    if (snippet.description) {
-      const albumMatch = snippet.description.match(/(?:album|from):\s*(.+?)(?:\n|$)/i);
-      if (albumMatch) {
-        album = albumMatch[1].trim();
-      }
-    }
-
     return {
       title,
       artist,
       album,
-      thumbnail: getYouTubeThumbnail(youtubeId),
-      description: snippet.description || undefined,
+      thumbnail: data.thumbnail_url || getYouTubeThumbnail(youtubeId),
     };
   } catch (error) {
     console.error('Error fetching YouTube metadata:', error);
