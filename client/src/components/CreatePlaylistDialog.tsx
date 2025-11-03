@@ -14,9 +14,10 @@ interface CreatePlaylistDialogProps {
   trigger?: React.ReactNode;
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
+  onSuccess?: () => void;
 }
 
-export default function CreatePlaylistDialog({ trigger, open: externalOpen, onOpenChange: externalOnOpenChange }: CreatePlaylistDialogProps) {
+export default function CreatePlaylistDialog({ trigger, open: externalOpen, onOpenChange: externalOnOpenChange, onSuccess }: CreatePlaylistDialogProps) {
   const [internalOpen, setInternalOpen] = useState(false);
   
   // Use external state if provided, otherwise use internal state
@@ -31,11 +32,23 @@ export default function CreatePlaylistDialog({ trigger, open: externalOpen, onOp
     queryKey: ['/api/songs'],
   });
 
+  // Controlled mode (when open and onOpenChange are provided)
+  const isControlled = externalOpen !== undefined && externalOnOpenChange !== undefined;
+  
   const canCreatePlaylist = songs.length >= 50;
   const songsNeeded = Math.max(0, 50 - songs.length);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!canCreatePlaylist) {
+      toast({
+        title: "Cannot create playlist",
+        description: `Playlist creation requires at least 50 songs. ${songsNeeded} more ${songsNeeded === 1 ? 'song' : 'songs'} needed (${songs.length}/50)`,
+        variant: "destructive",
+      });
+      return;
+    }
     
     if (!title.trim()) {
       toast({
@@ -60,6 +73,9 @@ export default function CreatePlaylistDialog({ trigger, open: externalOpen, onOp
 
       setTitle("");
       setOpen(false);
+      
+      // Call onSuccess callback if provided
+      onSuccess?.();
     } catch (error: any) {
       const errorMessage = error.message || "Failed to create playlist";
       toast({
@@ -83,7 +99,8 @@ export default function CreatePlaylistDialog({ trigger, open: externalOpen, onOp
     </Button>
   );
 
-  if (!canCreatePlaylist) {
+  // For uncontrolled mode, show tooltip if can't create
+  if (!canCreatePlaylist && !isControlled) {
     return (
       <Tooltip>
         <TooltipTrigger asChild>
@@ -101,6 +118,54 @@ export default function CreatePlaylistDialog({ trigger, open: externalOpen, onOp
     );
   }
 
+  if (isControlled) {
+    return (
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Create Playlist</DialogTitle>
+            <DialogDescription>
+              Give your new playlist a name
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="playlist-title">Playlist Name</Label>
+              <Input
+                id="playlist-title"
+                type="text"
+                placeholder="My Awesome Playlist"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                data-testid="input-playlist-title"
+                autoFocus
+              />
+            </div>
+            <div className="flex justify-end gap-3">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setOpen(false)}
+                disabled={isSubmitting}
+                data-testid="button-cancel"
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                disabled={isSubmitting}
+                data-testid="button-submit-playlist"
+              >
+                {isSubmitting ? "Creating..." : "Create"}
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
+    );
+  }
+
+  // Uncontrolled mode (when used with trigger)
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>

@@ -29,6 +29,8 @@ export default function AddToPlaylistDialog({
   const { data: playlists = [], isLoading } = useQuery<Playlist[]>({
     queryKey: ['/api/playlists'],
     enabled: open,
+    refetchOnMount: 'always',
+    staleTime: 0,
   });
 
   // Add song to playlist mutation
@@ -131,6 +133,10 @@ export default function AddToPlaylistDialog({
       <CreatePlaylistDialog 
         open={createPlaylistOpen}
         onOpenChange={setCreatePlaylistOpen}
+        onSuccess={() => {
+          // Re-open AddToPlaylistDialog after successful playlist creation
+          setTimeout(() => onOpenChange(true), 100);
+        }}
       />
     </>
   );
