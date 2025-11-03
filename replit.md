@@ -38,7 +38,7 @@ Preferred communication style: Simple, everyday language.
 
 ## External Dependencies
 
-- **YouTube Integration**: Extracts video IDs from URLs, embeds YouTube player via iframe, and uses YouTube's image API for thumbnails. Automatic metadata fetching from YouTube Data API is implemented for song submission.
+- **YouTube Integration**: Extracts video IDs from URLs, embeds YouTube player via iframe, and uses YouTube's image API for thumbnails. Automatic metadata fetching uses YouTube's oEmbed API (no authentication required) to populate song title, artist, and thumbnail during submission.
 - **Authentication Provider**: Replit Auth (OpenID Connect) for user authentication.
 - **Session Storage**: PostgreSQL for persistent session data.
 - **Development Tools**: Replit-specific plugins, Vite dev server, Cartographer.
