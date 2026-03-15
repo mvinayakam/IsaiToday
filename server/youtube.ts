@@ -9,64 +9,12 @@ interface YouTubeMetadata {
   description?: string;
 }
 
-let connectionSettings: any;
-
-// Get YouTube client - supports both custom API key and Replit integration
-async function getYouTubeClient() {
-  // Option 1: Use custom API key from secrets
-  const customApiKey = process.env.YOUTUBE_API_KEY;
-  if (customApiKey) {
-    console.log('[YouTube] Using custom API key from YOUTUBE_API_KEY secret');
-    return google.youtube({
-      version: 'v3',
-      auth: customApiKey,
-    });
+function getYouTubeClient() {
+  const apiKey = process.env.YOUTUBE_API_KEY;
+  if (!apiKey) {
+    throw new Error('YOUTUBE_API_KEY environment variable is not set');
   }
-
-  // Option 2: Use Replit YouTube integration (OAuth)
-  console.log('[YouTube] Using Replit YouTube integration');
-  const accessToken = await getAccessToken();
-  
-  const oauth2Client = new google.auth.OAuth2();
-  oauth2Client.setCredentials({
-    access_token: accessToken,
-  });
-  
-  return google.youtube({ version: 'v3', auth: oauth2Client });
-}
-
-async function getAccessToken() {
-  if (connectionSettings && connectionSettings.settings.expires_at && new Date(connectionSettings.settings.expires_at).getTime() > Date.now()) {
-    return connectionSettings.settings.access_token;
-  }
-  
-  const hostname = process.env.REPLIT_CONNECTORS_HOSTNAME
-  const xReplitToken = process.env.REPL_IDENTITY 
-    ? 'repl ' + process.env.REPL_IDENTITY 
-    : process.env.WEB_REPL_RENEWAL 
-    ? 'depl ' + process.env.WEB_REPL_RENEWAL 
-    : null;
-
-  if (!xReplitToken) {
-    throw new Error('X_REPLIT_TOKEN not found for repl/depl');
-  }
-
-  connectionSettings = await fetch(
-    'https://' + hostname + '/api/v2/connection?include_secrets=true&connector_names=youtube',
-    {
-      headers: {
-        'Accept': 'application/json',
-        'X_REPLIT_TOKEN': xReplitToken
-      }
-    }
-  ).then(res => res.json()).then(data => data.items?.[0]);
-
-  const accessToken = connectionSettings?.settings?.access_token || connectionSettings.settings?.oauth?.credentials?.access_token;
-
-  if (!connectionSettings || !accessToken) {
-    throw new Error('YouTube not connected');
-  }
-  return accessToken;
+  return google.youtube({ version: 'v3', auth: apiKey });
 }
 
 export function extractYouTubeId(url: string): string | null {
@@ -104,7 +52,7 @@ export function getYouTubeEmbedUrl(youtubeId: string): string {
 export async function fetchYouTubeMetadata(youtubeId: string): Promise<YouTubeMetadata | null> {
   try {
     console.log('[YouTube] Fetching metadata for video:', youtubeId);
-    const youtube = await getYouTubeClient();
+    const youtube = getYouTubeClient();
     
     const response = await youtube.videos.list({
       part: ['snippet'],

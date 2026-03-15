@@ -1,6 +1,6 @@
-import { storage } from "./storage";
+import { storage } from "../lib/storage";
 import { createSongMetadata } from "./youtube";
-import { nanoid } from "nanoid";
+import { randomUUID } from "crypto";
 
 // Generate sample users
 const generateUsers = () => {
@@ -11,7 +11,7 @@ const generateUsers = () => {
     const lastName = lastNames[idx % lastNames.length];
     const email = `${firstName.toLowerCase()}.${lastName.toLowerCase()}@example.com`;
     return {
-      id: `user-${nanoid(10)}`,
+      id: randomUUID(),
       email,
       firstName,
       lastName,
