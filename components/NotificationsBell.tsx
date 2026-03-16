@@ -78,9 +78,10 @@ export default function NotificationsBell() {
           variant="ghost"
           size="icon"
           className="relative"
+          aria-label={unreadCount > 0 ? `${unreadCount} unread notifications` : "Notifications"}
           data-testid="button-notifications"
         >
-          <Bell className="w-5 h-5" />
+          <Bell className="w-5 h-5" aria-hidden="true" />
           {unreadCount > 0 && (
             <Badge
               variant="destructive"

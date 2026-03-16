@@ -1,15 +1,16 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Loader2, Trash2 } from "lucide-react";
+import { Loader2, Trash2, LogIn } from "lucide-react";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { formatDistanceToNow } from "date-fns";
 import Link from "next/link";
+import { signIn } from "next-auth/react";
 
 interface Comment {
   comment: {
@@ -43,9 +44,10 @@ interface User {
 interface CommentSectionProps {
   songId: string;
   currentUserId?: string;
+  isAuthenticated?: boolean;
 }
 
-export function CommentSection({ songId, currentUserId }: CommentSectionProps) {
+export function CommentSection({ songId, currentUserId, isAuthenticated = false }: CommentSectionProps) {
   const [content, setContent] = useState("");
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [mentionQuery, setMentionQuery] = useState("");
@@ -160,8 +162,9 @@ export function CommentSection({ songId, currentUserId }: CommentSectionProps) {
   };
 
   const handleSubmit = () => {
-    if (!content.trim()) return;
-    createCommentMutation.mutate(content);
+    const trimmed = content.trim();
+    if (!trimmed || trimmed.length > 500) return;
+    createCommentMutation.mutate(trimmed);
   };
 
   // Parse comment content to make @mentions clickable
@@ -205,7 +208,7 @@ export function CommentSection({ songId, currentUserId }: CommentSectionProps) {
   return (
     <div className="space-y-4" data-testid="comment-section">
       {/* Comment input */}
-      {currentUserId && (
+      {isAuthenticated && currentUserId ? (
         <div className="space-y-2">
           <div className="relative">
             <Textarea
@@ -214,8 +217,12 @@ export function CommentSection({ songId, currentUserId }: CommentSectionProps) {
               onChange={handleInputChange}
               placeholder="Add a comment... (use @ to mention users)"
               className="min-h-20 resize-none"
+              maxLength={500}
               data-testid="input-comment"
             />
+            <span className={`absolute bottom-2 right-2 text-xs select-none pointer-events-none ${content.length > 450 ? (content.length >= 500 ? "text-destructive" : "text-yellow-500") : "text-muted-foreground/50"}`}>
+              {content.length}/500
+            </span>
             
             {/* Mention suggestions */}
             {showSuggestions && userSuggestions.length > 0 && (
@@ -245,14 +252,22 @@ export function CommentSection({ songId, currentUserId }: CommentSectionProps) {
           
           <Button
             onClick={handleSubmit}
-            disabled={!content.trim() || createCommentMutation.isPending}
+            disabled={!content.trim() || content.length > 500 || createCommentMutation.isPending}
             data-testid="button-post-comment"
           >
             {createCommentMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             Post Comment
           </Button>
         </div>
-      )}
+      ) : !isAuthenticated ? (
+        <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50 border border-white/10">
+          <p className="text-sm text-muted-foreground flex-1">Sign in to join the conversation</p>
+          <Button size="sm" className="gap-2 shrink-0" onClick={() => signIn("google", { callbackUrl: "/" })}>
+            <LogIn className="w-3.5 h-3.5" />
+            Sign in
+          </Button>
+        </div>
+      ) : null}
 
       {/* Comments list */}
       <div className="space-y-4">

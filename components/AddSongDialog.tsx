@@ -1,21 +1,38 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { useState, useEffect, useRef } from "react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Plus, X } from "lucide-react";
+import { Plus, X, Search, ArrowLeft, Loader2, Link2, Music2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import type { Album, Language, Artist, Tag } from "@shared/schema";
+import type { Tag } from "@shared/schema";
+import { useDebounce } from "@/hooks/use-debounce";
 
 interface AddSongDialogProps {
   trigger?: React.ReactNode;
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
+}
+
+interface SearchResult {
+  youtubeId: string;
+  title: string;
+  channelTitle: string;
+  thumbnail: string;
+}
+
+interface SelectedSong {
+  youtubeId: string;
+  title: string;
+  artist: string;
+  thumbnail: string;
+  album?: string;
+  language?: string;
 }
 
 function extractYouTubeId(url: string): string | null {
@@ -24,519 +41,430 @@ function extractYouTubeId(url: string): string | null {
     /youtube\.com\/embed\/([^&\n?#]+)/,
     /youtube\.com\/v\/([^&\n?#]+)/,
   ];
-
   for (const pattern of patterns) {
     const match = url.match(pattern);
-    if (match && match[1]) {
-      return match[1];
-    }
+    if (match?.[1]) return match[1];
   }
-
-  if (/^[a-zA-Z0-9_-]{11}$/.test(url)) {
-    return url;
-  }
-
+  if (/^[a-zA-Z0-9_-]{11}$/.test(url)) return url;
   return null;
 }
 
 export default function AddSongDialog({ trigger, open: externalOpen, onOpenChange: externalOnOpenChange }: AddSongDialogProps) {
   const [internalOpen, setInternalOpen] = useState(false);
-  
-  // Use external state if provided, otherwise use internal state
   const open = externalOpen !== undefined ? externalOpen : internalOpen;
   const setOpen = externalOnOpenChange || setInternalOpen;
+
+  // Step: "search" | "story"
+  const [step, setStep] = useState<"search" | "story">("search");
+
+  // Step 1 — search state
+  const [query, setQuery] = useState("");
+  const [urlMode, setUrlMode] = useState(false);
   const [youtubeUrl, setYoutubeUrl] = useState("");
-  const [title, setTitle] = useState("");
-  const [album, setAlbum] = useState("");
-  const [language, setLanguage] = useState("");
-  const [artistInput, setArtistInput] = useState("");
-  const [selectedArtists, setSelectedArtists] = useState<string[]>([]);
+  const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [isFetchingMetadata, setIsFetchingMetadata] = useState(false);
+  const debouncedQuery = useDebounce(query, 400);
+
+  // Step 2 — story state
+  const [selectedSong, setSelectedSong] = useState<SelectedSong | null>(null);
+  const [story, setStory] = useState("");
   const [tagInput, setTagInput] = useState("");
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
-  const [story, setStory] = useState("");
-  
-  const [albumSuggestions, setAlbumSuggestions] = useState<Album[]>([]);
-  const [languageSuggestions, setLanguageSuggestions] = useState<Language[]>([]);
-  const [artistSuggestions, setArtistSuggestions] = useState<Artist[]>([]);
   const [tagSuggestions, setTagSuggestions] = useState<Tag[]>([]);
-  
+  const [editTitle, setEditTitle] = useState("");
+  const [editArtist, setEditArtist] = useState("");
+  const [editAlbum, setEditAlbum] = useState("");
+  const [editLanguage, setEditLanguage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isFetchingMetadata, setIsFetchingMetadata] = useState(false);
+
+  const storyRef = useRef<HTMLTextAreaElement>(null);
   const { toast } = useToast();
 
-  // Automatically fetch metadata when YouTube URL changes
+  // Search YouTube as user types
   useEffect(() => {
-    const fetchMetadata = async () => {
-      const youtubeId = extractYouTubeId(youtubeUrl);
-      if (!youtubeId) return;
+    if (!debouncedQuery.trim() || urlMode) {
+      setSearchResults([]);
+      return;
+    }
+    setIsSearching(true);
+    fetch(`/api/youtube/search?q=${encodeURIComponent(debouncedQuery)}`)
+      .then((r) => r.json())
+      .then((data) => setSearchResults(Array.isArray(data) ? data : []))
+      .catch(() => setSearchResults([]))
+      .finally(() => setIsSearching(false));
+  }, [debouncedQuery, urlMode]);
 
-      setIsFetchingMetadata(true);
-      try {
-        const response = await fetch(`/api/youtube/metadata?url=${encodeURIComponent(youtubeUrl)}`);
-        if (!response.ok) {
-          throw new Error('Failed to fetch metadata');
-        }
-        
-        const metadata = await response.json();
-        let fieldsUpdated = false;
-        
-        // Only auto-fill if fields are empty - use functional setters to check latest values
-        setTitle(prev => {
-          if (!prev && metadata.title) {
-            fieldsUpdated = true;
-            return metadata.title;
-          }
-          return prev;
-        });
-        
-        setSelectedArtists(prev => {
-          if (prev.length === 0 && metadata.artist) {
-            fieldsUpdated = true;
-            return [metadata.artist];
-          }
-          return prev;
-        });
-        
-        setAlbum(prev => {
-          if (!prev && metadata.album) {
-            fieldsUpdated = true;
-            return metadata.album;
-          }
-          return prev;
-        });
+  // Load tag suggestions once
+  useEffect(() => {
+    if (open) {
+      fetch("/api/tags").then((r) => r.json()).then(setTagSuggestions).catch(() => {});
+    }
+  }, [open]);
 
-        if (fieldsUpdated) {
-          toast({
-            title: "Metadata loaded!",
-            description: "We've automatically filled in the song details from YouTube",
+  // Auto-fetch metadata when URL is pasted
+  useEffect(() => {
+    if (!urlMode || !youtubeUrl) return;
+    const id = extractYouTubeId(youtubeUrl);
+    if (!id) return;
+
+    setIsFetchingMetadata(true);
+    fetch(`/api/youtube/metadata?url=${encodeURIComponent(youtubeUrl)}`)
+      .then((r) => r.json())
+      .then((meta) => {
+        if (meta.title) {
+          selectSong({
+            youtubeId: id,
+            title: meta.title,
+            artist: meta.artist ?? "",
+            thumbnail: `https://img.youtube.com/vi/${id}/hqdefault.jpg`,
+            album: meta.album,
           });
         }
-      } catch (error) {
-        console.error('Error fetching YouTube metadata:', error);
-        // Silently fail - user can still manually enter data
-      } finally {
-        setIsFetchingMetadata(false);
-      }
+      })
+      .catch(() => {})
+      .finally(() => setIsFetchingMetadata(false));
+  }, [youtubeUrl]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const selectSong = (song: SearchResult | SelectedSong) => {
+    const sel: SelectedSong = {
+      youtubeId: song.youtubeId,
+      title: song.title,
+      artist: "channelTitle" in song ? (song as SearchResult).channelTitle : (song as SelectedSong).artist,
+      thumbnail: song.thumbnail,
+      album: "album" in song ? (song as SelectedSong).album : undefined,
     };
-
-    // Debounce the fetch to avoid too many API calls
-    const timeoutId = setTimeout(() => {
-      if (youtubeUrl) {
-        fetchMetadata();
-      }
-    }, 500);
-
-    return () => clearTimeout(timeoutId);
-  }, [youtubeUrl]); // toast is stable, safe to omit from deps
-
-  // Fetch album suggestions
-  useEffect(() => {
-    if (album.length > 1) {
-      fetch(`/api/albums/search?q=${encodeURIComponent(album)}`)
-        .then(res => res.json())
-        .then(setAlbumSuggestions)
-        .catch(() => setAlbumSuggestions([]));
-    } else {
-      setAlbumSuggestions([]);
-    }
-  }, [album]);
-
-  // Fetch language suggestions
-  useEffect(() => {
-    if (language.length > 1) {
-      fetch(`/api/languages/search?q=${encodeURIComponent(language)}`)
-        .then(res => res.json())
-        .then(setLanguageSuggestions)
-        .catch(() => setLanguageSuggestions([]));
-    } else {
-      setLanguageSuggestions([]);
-    }
-  }, [language]);
-
-  // Fetch artist suggestions
-  useEffect(() => {
-    if (artistInput.length > 1) {
-      fetch(`/api/artists/search?q=${encodeURIComponent(artistInput)}`)
-        .then(res => res.json())
-        .then(setArtistSuggestions)
-        .catch(() => setArtistSuggestions([]));
-    } else {
-      setArtistSuggestions([]);
-    }
-  }, [artistInput]);
-
-  // Fetch all tags
-  useEffect(() => {
-    fetch('/api/tags')
-      .then(res => res.json())
-      .then(setTagSuggestions)
-      .catch(() => setTagSuggestions([]));
-  }, []);
-
-  const addArtist = (name: string) => {
-    if (name.trim() && !selectedArtists.includes(name.trim())) {
-      setSelectedArtists([...selectedArtists, name.trim()]);
-      setArtistInput("");
-      setArtistSuggestions([]);
-    }
+    setSelectedSong(sel);
+    setEditTitle(sel.title);
+    setEditArtist(sel.artist);
+    setEditAlbum(sel.album ?? "");
+    setEditLanguage("");
+    setStep("story");
+    setTimeout(() => storyRef.current?.focus(), 100);
   };
 
-  const removeArtist = (name: string) => {
-    setSelectedArtists(selectedArtists.filter(a => a !== name));
+  const handleUrlSubmit = () => {
+    const id = extractYouTubeId(youtubeUrl);
+    if (!id) {
+      toast({ title: "Invalid URL", description: "Please enter a valid YouTube URL", variant: "destructive" });
+      return;
+    }
+    if (!isFetchingMetadata && !selectedSong) {
+      // Metadata hasn't loaded yet or failed — still proceed with what we have
+      selectSong({ youtubeId: id, title: youtubeUrl, channelTitle: "", thumbnail: `https://img.youtube.com/vi/${id}/hqdefault.jpg` });
+    }
   };
 
   const addTag = (name: string) => {
-    if (name.trim() && !selectedTags.includes(name.trim())) {
-      setSelectedTags([...selectedTags, name.trim()]);
-      setTagInput("");
-    }
+    const t = name.trim();
+    if (t && !selectedTags.includes(t)) setSelectedTags([...selectedTags, t]);
+    setTagInput("");
   };
 
-  const removeTag = (name: string) => {
-    setSelectedTags(selectedTags.filter(t => t !== name));
-  };
+  const removeTag = (name: string) => setSelectedTags(selectedTags.filter((t) => t !== name));
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!youtubeUrl || !title || selectedArtists.length === 0 || selectedTags.length === 0 || !story) {
-      toast({
-        title: "Missing required fields",
-        description: "Please fill in YouTube URL, title, at least one artist, at least one tag, and your story",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    const youtubeId = extractYouTubeId(youtubeUrl);
-    if (!youtubeId) {
-      toast({
-        title: "Invalid URL",
-        description: "Please enter a valid YouTube URL",
-        variant: "destructive",
-      });
+  const handleSubmit = async () => {
+    if (!selectedSong || !story.trim()) {
+      toast({ title: "Missing story", description: "Tell us why you love this song!", variant: "destructive" });
       return;
     }
 
     setIsSubmitting(true);
-
     try {
-      // Create song with first artist (backward compatibility)
       const songRes = await apiRequest("POST", "/api/songs", {
-        youtubeId,
-        title,
-        artist: selectedArtists[0],
-        album: album.trim() || null,
-        language: language.trim() || null,
-        thumbnail: `https://img.youtube.com/vi/${youtubeId}/maxresdefault.jpg`,
+        youtubeId: selectedSong.youtubeId,
+        title: editTitle || selectedSong.title,
+        artist: editArtist || selectedSong.artist,
+        album: editAlbum || null,
+        language: editLanguage || null,
+        thumbnail: `https://img.youtube.com/vi/${selectedSong.youtubeId}/maxresdefault.jpg`,
       });
       const song = await songRes.json();
 
-      // Create/get artists and link them to song
-      for (const artistName of selectedArtists) {
-        const artistRes = await apiRequest("POST", "/api/artists", { name: artistName });
+      // Artist link
+      if (editArtist || selectedSong.artist) {
+        const artistRes = await apiRequest("POST", "/api/artists", { name: editArtist || selectedSong.artist });
         const artist = await artistRes.json();
-        
-        // Link artist to song
-        await apiRequest("POST", `/api/songs/${song.id}/artists`, {
-          songId: song.id,
-          artistId: artist.id,
-        }).catch(() => {}); // Ignore if already linked
+        await apiRequest("POST", `/api/songs/${song.id}/artists`, { songId: song.id, artistId: artist.id }).catch(() => {});
       }
 
-      // Add story
-      await apiRequest("POST", `/api/songs/${song.id}/stories`, { story });
+      // Story (required here)
+      await apiRequest("POST", `/api/songs/${song.id}/stories`, { story: story.trim() });
 
-      // Add tags
+      // Tags (optional)
       for (const tagName of selectedTags) {
         const tagRes = await apiRequest("POST", "/api/tags", { name: tagName });
         const tag = await tagRes.json();
-        
-        await apiRequest("POST", `/api/songs/${song.id}/tags`, {
-          songId: song.id,
-          tagId: tag.id,
-        }).catch(() => {}); // Ignore if already linked
+        await apiRequest("POST", `/api/songs/${song.id}/tags`, { songId: song.id, tagId: tag.id }).catch(() => {});
       }
 
-      // Invalidate queries to refresh data
       queryClient.invalidateQueries({ queryKey: ["/api/songs"] });
       queryClient.invalidateQueries({ queryKey: ["/api/discover"] });
       queryClient.invalidateQueries({ queryKey: ["/api/feed"] });
       queryClient.invalidateQueries({ queryKey: ["/api/song-of-day"] });
 
-      toast({
-        title: "Success!",
-        description: "Your song has been added",
-      });
-
-      // Reset form
-      setYoutubeUrl("");
-      setTitle("");
-      setAlbum("");
-      setLanguage("");
-      setArtistInput("");
-      setSelectedArtists([]);
-      setTagInput("");
-      setSelectedTags([]);
-      setStory("");
-      setOpen(false);
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to add song",
-        variant: "destructive",
-      });
+      toast({ title: "Song shared!", description: "Your story is now live." });
+      handleClose();
+    } catch (error: unknown) {
+      const msg = error instanceof Error ? error.message : "Failed to add song";
+      toast({ title: "Error", description: msg, variant: "destructive" });
     } finally {
       setIsSubmitting(false);
     }
   };
 
+  const handleClose = () => {
+    setStep("search");
+    setQuery("");
+    setUrlMode(false);
+    setYoutubeUrl("");
+    setSearchResults([]);
+    setSelectedSong(null);
+    setStory("");
+    setTagInput("");
+    setSelectedTags([]);
+    setEditTitle("");
+    setEditArtist("");
+    setEditAlbum("");
+    setEditLanguage("");
+    setOpen(false);
+  };
+
+  const storyPlaceholders = [
+    "This song takes me back to…",
+    "I first heard this when…",
+    "This one means a lot because…",
+    "Every time this plays, I feel…",
+    "Why I love this song…",
+  ];
+  const placeholder = storyPlaceholders[Math.floor(Math.random() * storyPlaceholders.length)];
+
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      {trigger && (
-        <DialogTrigger asChild>
-          {trigger}
-        </DialogTrigger>
-      )}
-      <DialogContent className="max-w-4xl max-h-[85vh] sm:max-h-[90vh] flex flex-col">
-        <DialogHeader className="shrink-0">
-          <DialogTitle>Add a Song</DialogTitle>
-          <DialogDescription>
-            Share a song and tell us why you love it
-          </DialogDescription>
-        </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4 overflow-y-auto flex-1 pr-2">
-          {/* YouTube URL - Spanning across */}
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <Label htmlFor="youtube-url">YouTube URL *</Label>
-              {isFetchingMetadata && (
-                <span className="text-xs text-muted-foreground" data-testid="text-fetching-metadata">
-                  Loading metadata...
-                </span>
+    <Dialog open={open} onOpenChange={(v) => { if (!v) handleClose(); else setOpen(true); }}>
+      {trigger && <DialogTrigger asChild>{trigger}</DialogTrigger>}
+
+      <DialogContent className="max-w-lg max-h-[90vh] flex flex-col gap-0 p-0 overflow-hidden">
+        {/* ── Step 1: Find the song ── */}
+        {step === "search" && (
+          <>
+            <DialogHeader className="px-6 pt-6 pb-4 shrink-0">
+              <DialogTitle className="text-xl">What song do you want to share?</DialogTitle>
+            </DialogHeader>
+
+            <div className="px-6 pb-6 flex flex-col gap-4 overflow-y-auto flex-1">
+              {!urlMode ? (
+                <>
+                  {/* Search input */}
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+                    <Input
+                      autoFocus
+                      className="pl-9"
+                      placeholder="Search by song name, artist…"
+                      value={query}
+                      onChange={(e) => setQuery(e.target.value)}
+                    />
+                    {isSearching && (
+                      <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 animate-spin text-muted-foreground" />
+                    )}
+                  </div>
+
+                  {/* Search results */}
+                  {searchResults.length > 0 && (
+                    <div className="flex flex-col gap-1">
+                      {searchResults.map((r) => (
+                        <button
+                          key={r.youtubeId}
+                          onClick={() => selectSong(r)}
+                          className="flex items-center gap-3 p-2.5 rounded-lg hover:bg-white/5 transition-colors text-left w-full"
+                        >
+                          <img
+                            src={r.thumbnail}
+                            alt={r.title}
+                            className="w-16 h-10 rounded object-cover shrink-0 bg-muted"
+                          />
+                          <div className="min-w-0">
+                            <p className="text-sm font-medium line-clamp-1">{r.title}</p>
+                            <p className="text-xs text-muted-foreground line-clamp-1">{r.channelTitle}</p>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+
+                  {!isSearching && query.length > 2 && searchResults.length === 0 && (
+                    <p className="text-sm text-muted-foreground text-center py-4">No results — try a different search or paste a URL below.</p>
+                  )}
+
+                  {/* Fallback to URL */}
+                  <button
+                    onClick={() => setUrlMode(true)}
+                    className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors mx-auto mt-auto pt-2"
+                  >
+                    <Link2 className="w-4 h-4" />
+                    Paste a YouTube URL instead
+                  </button>
+                </>
+              ) : (
+                <>
+                  {/* URL mode */}
+                  <button
+                    onClick={() => { setUrlMode(false); setYoutubeUrl(""); }}
+                    className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors w-fit"
+                  >
+                    <ArrowLeft className="w-4 h-4" />
+                    Back to search
+                  </button>
+                  <div className="space-y-2">
+                    <Label htmlFor="yt-url">YouTube URL</Label>
+                    <Input
+                      id="yt-url"
+                      autoFocus
+                      placeholder="https://www.youtube.com/watch?v=…"
+                      value={youtubeUrl}
+                      onChange={(e) => setYoutubeUrl(e.target.value)}
+                    />
+                  </div>
+                  <Button
+                    onClick={handleUrlSubmit}
+                    disabled={!youtubeUrl || isFetchingMetadata}
+                    className="w-full"
+                  >
+                    {isFetchingMetadata ? (
+                      <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Loading song info…</>
+                    ) : (
+                      "Continue"
+                    )}
+                  </Button>
+                </>
               )}
             </div>
-            <Input
-              id="youtube-url"
-              type="text"
-              placeholder="https://www.youtube.com/watch?v=..."
-              value={youtubeUrl}
-              onChange={(e) => setYoutubeUrl(e.target.value)}
-              data-testid="input-youtube-url"
-              disabled={isFetchingMetadata}
-            />
-          </div>
+          </>
+        )}
 
-          {/* Two Column Layout */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Left Column - Metadata */}
-            <div className="space-y-4">
-              <h3 className="text-sm font-semibold text-foreground">Song Metadata</h3>
-              
-              <div className="space-y-2">
-                <Label htmlFor="title">Song Title *</Label>
-                <Input
-                  id="title"
-                  type="text"
-                  placeholder="Enter song title"
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  data-testid="input-title"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="album">Album</Label>
-                <Input
-                  id="album"
-                  type="text"
-                  placeholder="Enter or select album name"
-                  value={album}
-                  onChange={(e) => setAlbum(e.target.value)}
-                  data-testid="input-album"
-                  list="album-suggestions"
-                />
-                {albumSuggestions.length > 0 && (
-                  <datalist id="album-suggestions">
-                    {albumSuggestions.map((alb) => (
-                      <option key={alb.id} value={alb.name} />
-                    ))}
-                  </datalist>
-                )}
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="language">Language</Label>
-                <Input
-                  id="language"
-                  type="text"
-                  placeholder="Enter or select language"
-                  value={language}
-                  onChange={(e) => setLanguage(e.target.value)}
-                  data-testid="input-language"
-                  list="language-suggestions"
-                />
-                {languageSuggestions.length > 0 && (
-                  <datalist id="language-suggestions">
-                    {languageSuggestions.map((lang) => (
-                      <option key={lang.id} value={lang.name} />
-                    ))}
-                  </datalist>
-                )}
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="artist">Artists * (Add multiple)</Label>
-                <div className="flex gap-2">
-                  <Input
-                    id="artist"
-                    type="text"
-                    placeholder="Type artist name and press Enter"
-                    value={artistInput}
-                    onChange={(e) => setArtistInput(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") {
-                        e.preventDefault();
-                        addArtist(artistInput);
-                      }
-                    }}
-                    data-testid="input-artist"
-                    list="artist-suggestions"
+        {/* ── Step 2: Tell your story ── */}
+        {step === "story" && selectedSong && (
+          <>
+            <DialogHeader className="px-6 pt-5 pb-3 shrink-0 border-b border-white/5">
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => setStep("search")}
+                  className="text-muted-foreground hover:text-foreground transition-colors"
+                  aria-label="Back to search"
+                >
+                  <ArrowLeft className="w-5 h-5" />
+                </button>
+                <div className="flex items-center gap-3 min-w-0">
+                  <img
+                    src={selectedSong.thumbnail}
+                    alt={selectedSong.title}
+                    className="w-10 h-7 rounded object-cover shrink-0 bg-muted"
+                    onError={(e) => { e.currentTarget.style.display = "none"; }}
                   />
-                  <Button
-                    type="button"
-                    size="icon"
-                    onClick={() => addArtist(artistInput)}
-                    data-testid="button-add-artist"
-                  >
-                    <Plus className="w-4 h-4" />
-                  </Button>
-                </div>
-                {artistSuggestions.length > 0 && (
-                  <datalist id="artist-suggestions">
-                    {artistSuggestions.map((art) => (
-                      <option key={art.id} value={art.name} />
-                    ))}
-                  </datalist>
-                )}
-                {selectedArtists.length > 0 && (
-                  <div className="flex flex-wrap gap-2 mt-2">
-                    {selectedArtists.map((artist) => (
-                      <Badge key={artist} variant="secondary" className="gap-1 pr-1" data-testid={`badge-artist-${artist}`}>
-                        <span>{artist}</span>
-                        <button
-                          type="button"
-                          className="ml-1 rounded-sm hover:bg-secondary-foreground/20 p-0.5"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            removeArtist(artist);
-                          }}
-                          data-testid={`button-remove-artist-${artist}`}
-                        >
-                          <X className="w-3 h-3" />
-                        </button>
-                      </Badge>
-                    ))}
+                  <div className="min-w-0">
+                    <DialogTitle className="text-base leading-tight line-clamp-1">{editTitle || selectedSong.title}</DialogTitle>
+                    <p className="text-xs text-muted-foreground line-clamp-1">{editArtist || selectedSong.artist}</p>
                   </div>
-                )}
+                </div>
+              </div>
+            </DialogHeader>
+
+            <div className="px-6 py-5 flex flex-col gap-5 overflow-y-auto flex-1">
+              {/* Story — the hero */}
+              <div className="space-y-2">
+                <Label htmlFor="story" className="text-base font-semibold">
+                  Why do you love this song? <span className="text-primary">*</span>
+                </Label>
+                <Textarea
+                  id="story"
+                  ref={storyRef}
+                  placeholder={placeholder}
+                  value={story}
+                  onChange={(e) => setStory(e.target.value)}
+                  className="min-h-[140px] resize-none text-base leading-relaxed"
+                />
               </div>
 
+              {/* Tags — optional, lightweight */}
               <div className="space-y-2">
-                <Label htmlFor="tags">Tags * (Add at least one)</Label>
+                <Label htmlFor="tags" className="text-sm text-muted-foreground">
+                  Tags <span className="text-muted-foreground/50">(optional)</span>
+                </Label>
+                <div className="flex gap-2 flex-wrap">
+                  {selectedTags.map((t) => (
+                    <Badge key={t} variant="secondary" className="gap-1 pr-1">
+                      #{t}
+                      <button type="button" onClick={() => removeTag(t)} className="ml-0.5 rounded-sm hover:bg-secondary-foreground/20 p-0.5">
+                        <X className="w-3 h-3" />
+                      </button>
+                    </Badge>
+                  ))}
+                </div>
                 <div className="flex gap-2">
                   <Input
                     id="tags"
-                    type="text"
-                    placeholder="Type tag and press Enter"
+                    placeholder="e.g. tamil, romantic, 90s…"
                     value={tagInput}
                     onChange={(e) => setTagInput(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") {
-                        e.preventDefault();
-                        addTag(tagInput);
-                      }
-                    }}
-                    data-testid="input-tag"
+                    onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addTag(tagInput); } }}
                     list="tag-suggestions"
+                    className="text-sm"
                   />
-                  <Button
-                    type="button"
-                    size="icon"
-                    onClick={() => addTag(tagInput)}
-                    data-testid="button-add-tag"
-                  >
+                  <Button type="button" size="icon" variant="outline" onClick={() => addTag(tagInput)} aria-label="Add tag">
                     <Plus className="w-4 h-4" />
                   </Button>
                 </div>
                 {tagSuggestions.length > 0 && (
                   <datalist id="tag-suggestions">
-                    {tagSuggestions.map((tag) => (
-                      <option key={tag.id} value={tag.name} />
-                    ))}
+                    {tagSuggestions.map((t) => <option key={t.id} value={t.name} />)}
                   </datalist>
                 )}
-                {selectedTags.length > 0 && (
-                  <div className="flex flex-wrap gap-2 mt-2">
-                    {selectedTags.map((tag) => (
-                      <Badge key={tag} variant="outline" className="gap-1 pr-1" data-testid={`badge-tag-${tag}`}>
-                        <span>{tag}</span>
-                        <button
-                          type="button"
-                          className="ml-1 rounded-sm hover:bg-muted p-0.5"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            removeTag(tag);
-                          }}
-                          data-testid={`button-remove-tag-${tag}`}
-                        >
-                          <X className="w-3 h-3" />
-                        </button>
-                      </Badge>
-                    ))}
+              </div>
+
+              {/* Metadata — always visible, secondary visual weight */}
+              <div className="space-y-3 pt-1 border-t border-white/5">
+                <p className="text-xs text-muted-foreground flex items-center gap-1.5 pt-1">
+                  <Music2 className="w-3.5 h-3.5" />
+                  Song details — helps others find this song
+                </p>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1 col-span-2">
+                    <Label htmlFor="m-title" className="text-xs text-muted-foreground">Title</Label>
+                    <Input id="m-title" value={editTitle} onChange={(e) => setEditTitle(e.target.value)} className="text-sm h-8" />
                   </div>
+                  <div className="space-y-1">
+                    <Label htmlFor="m-artist" className="text-xs text-muted-foreground">Artist</Label>
+                    <Input id="m-artist" value={editArtist} onChange={(e) => setEditArtist(e.target.value)} className="text-sm h-8" />
+                  </div>
+                  <div className="space-y-1">
+                    <Label htmlFor="m-language" className="text-xs text-muted-foreground">Language</Label>
+                    <Input id="m-language" placeholder="Tamil, Hindi…" value={editLanguage} onChange={(e) => setEditLanguage(e.target.value)} className="text-sm h-8" />
+                  </div>
+                  <div className="space-y-1 col-span-2">
+                    <Label htmlFor="m-album" className="text-xs text-muted-foreground">Album / Film</Label>
+                    <Input id="m-album" value={editAlbum} onChange={(e) => setEditAlbum(e.target.value)} className="text-sm h-8" />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Submit */}
+            <div className="px-6 py-4 border-t border-white/5 shrink-0">
+              <Button
+                onClick={handleSubmit}
+                disabled={!story.trim() || isSubmitting}
+                className="w-full"
+                size="lg"
+              >
+                {isSubmitting ? (
+                  <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Sharing…</>
+                ) : (
+                  "Share this song"
                 )}
-              </div>
+              </Button>
             </div>
-
-            {/* Right Column - Story */}
-            <div className="space-y-4">
-              <h3 className="text-sm font-semibold text-foreground">Why You Love This Song</h3>
-              
-              <div className="space-y-2">
-                <Label htmlFor="story">Your Story *</Label>
-                <Textarea
-                  id="story"
-                  placeholder="Why do you love this song? What does it mean to you? Share your personal connection, memories, or feelings about this song..."
-                  value={story}
-                  onChange={(e) => setStory(e.target.value)}
-                  className="min-h-[200px] sm:min-h-[300px] md:min-h-[400px]"
-                  data-testid="input-story"
-                />
-              </div>
-            </div>
-          </div>
-
-          <div className="flex justify-end gap-3 pt-4 border-t">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setOpen(false)}
-              disabled={isSubmitting}
-              data-testid="button-cancel"
-            >
-              Cancel
-            </Button>
-            <Button
-              type="submit"
-              disabled={isSubmitting}
-              data-testid="button-submit-song"
-            >
-              {isSubmitting ? "Adding..." : "Add Song"}
-            </Button>
-          </div>
-        </form>
+          </>
+        )}
       </DialogContent>
     </Dialog>
   );

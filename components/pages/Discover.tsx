@@ -29,21 +29,9 @@ export default function Discover() {
       <div className="min-h-screen pt-16 md:pt-20">
         <div className="max-w-7xl mx-auto px-4 md:px-6 py-8">
           <h1 className="text-4xl md:text-5xl font-bold tracking-tight mb-2">Discover</h1>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
-            {[1,2,3,4,5,6].map(i => <Skeleton key={i} className="h-64 rounded-lg" />)}
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6 mt-8">
+            {[1,2,3,4,5,6,7,8].map(i => <Skeleton key={i} className="h-64 rounded-xl" />)}
           </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (!isAuthenticated) {
-    return (
-      <div className="min-h-screen pt-16 md:pt-20 flex items-center justify-center">
-        <div className="max-w-md mx-auto px-4 text-center">
-          <h1 className="text-4xl font-bold mb-4">Discover Music</h1>
-          <p className="text-lg text-muted-foreground mb-8">Sign in to explore trending songs</p>
-          <Button size="lg" onClick={() => signIn("google")}>Sign in with Google</Button>
         </div>
       </div>
     );
@@ -56,6 +44,15 @@ export default function Discover() {
           <h1 className="text-4xl md:text-5xl font-bold tracking-tight mb-2">Discover</h1>
           <p className="text-lg text-muted-foreground">Explore trending songs and discover new favorites</p>
         </div>
+
+        {!isAuthenticated && (
+          <div className="max-w-7xl mx-auto px-4 md:px-6 mb-6">
+            <div className="flex items-center justify-between gap-4 rounded-xl border border-white/10 bg-white/5 px-5 py-4">
+              <p className="text-sm text-muted-foreground">Sign in to like songs, leave comments, and build playlists</p>
+              <Button size="sm" onClick={() => signIn("google")} className="shrink-0">Sign in</Button>
+            </div>
+          </div>
+        )}
 
         {tagCloud.length > 0 && (
           <div className="max-w-7xl mx-auto px-4 md:px-6 mb-12">

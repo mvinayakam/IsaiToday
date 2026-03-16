@@ -1,10 +1,11 @@
 "use client";
 
-import { Heart, ListPlus, Share2, Play } from "lucide-react";
+import { Heart, ListPlus, Share2, Play, LogIn, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useState } from "react";
 import Link from "next/link";
+import { signIn } from "next-auth/react";
 import YouTubePlayerDialog from "./YouTubePlayerDialog";
 import type { Song, User, SongStory } from "@shared/schema";
 
@@ -15,6 +16,7 @@ interface SongOfTheDayProps {
   tags?: string[];
   likes?: number;
   isLiked?: boolean;
+  isAuthenticated?: boolean;
   onLike?: () => void;
   onAddToPlaylist?: () => void;
   onShare?: () => void;
@@ -29,6 +31,7 @@ export default function SongOfTheDay({
   tags = [],
   likes = 0,
   isLiked = false,
+  isAuthenticated = false,
   onLike,
   onAddToPlaylist,
   onShare,
@@ -92,6 +95,7 @@ export default function SongOfTheDay({
         artists={[artist]}
         tags={tags}
         currentUserId={currentUserId}
+        isAuthenticated={isAuthenticated}
       />
 
       <div className="backdrop-blur-md bg-card/50 border border-white/10 rounded-2xl p-6 md:p-12 shadow-xl">
@@ -136,35 +140,59 @@ export default function SongOfTheDay({
           </div>
         )}
 
-        <div className="flex flex-wrap items-center justify-center gap-3">
-          <Button
-            variant="default"
-            className="gap-2"
-            onClick={handleLike}
-            data-testid="button-like-sotd"
-          >
-            <Heart className={`w-4 h-4 ${liked ? 'fill-white' : ''}`} />
-            <span>{liked ? 'Liked' : 'Like'} ({likeCount})</span>
-          </Button>
-          <Button
-            variant="outline"
-            className="gap-2"
-            onClick={onAddToPlaylist}
-            data-testid="button-add-playlist"
-          >
-            <ListPlus className="w-4 h-4" />
-            <span>Add to Playlist</span>
-          </Button>
-          <Button
-            variant="ghost"
-            className="gap-2"
-            onClick={onShare}
-            data-testid="button-share-sotd"
-          >
-            <Share2 className="w-4 h-4" />
-            <span>Share</span>
-          </Button>
-        </div>
+        {isAuthenticated ? (
+          <div className="flex flex-wrap items-center justify-center gap-3">
+            <Button
+              variant="default"
+              className="gap-2"
+              onClick={handleLike}
+              data-testid="button-like-sotd"
+            >
+              <Heart className={`w-4 h-4 ${liked ? 'fill-white' : ''}`} />
+              <span>{liked ? 'Liked' : 'Like'} ({likeCount})</span>
+            </Button>
+            <Button
+              variant="outline"
+              className="gap-2"
+              onClick={handlePlay}
+              data-testid="button-comments-sotd"
+            >
+              <MessageCircle className="w-4 h-4" />
+              <span>Comments</span>
+            </Button>
+            <Button
+              variant="outline"
+              className="gap-2"
+              onClick={onAddToPlaylist}
+              data-testid="button-add-playlist"
+            >
+              <ListPlus className="w-4 h-4" />
+              <span>Add to Playlist</span>
+            </Button>
+            <Button
+              variant="ghost"
+              className="gap-2"
+              onClick={onShare}
+              data-testid="button-share-sotd"
+            >
+              <Share2 className="w-4 h-4" />
+              <span>Share</span>
+            </Button>
+          </div>
+        ) : (
+          <div className="flex flex-col items-center gap-3">
+            <p className="text-sm text-muted-foreground">Sign in to like this song and add it to a playlist</p>
+            <Button
+              variant="default"
+              className="gap-2"
+              onClick={() => signIn("google", { callbackUrl: "/" })}
+              data-testid="button-signin-sotd"
+            >
+              <LogIn className="w-4 h-4" />
+              <span>Sign in to interact</span>
+            </Button>
+          </div>
+        )}
       </div>
     </div>
   );

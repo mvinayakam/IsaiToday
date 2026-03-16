@@ -25,6 +25,7 @@ interface YouTubePlayerDialogProps {
   hasNext?: boolean;
   hasPrevious?: boolean;
   currentUserId?: string;
+  isAuthenticated?: boolean;
 }
 
 export default function YouTubePlayerDialog({
@@ -42,6 +43,7 @@ export default function YouTubePlayerDialog({
   hasNext = false,
   hasPrevious = false,
   currentUserId,
+  isAuthenticated = false,
 }: YouTubePlayerDialogProps) {
   const embedUrl = `https://www.youtube.com/embed/${youtubeId}?autoplay=1&controls=1&modestbranding=1`;
 
@@ -188,7 +190,7 @@ export default function YouTubePlayerDialog({
               {song && (
                 <div className="pt-6 border-t border-white/10">
                   <h3 className="text-lg font-semibold mb-4">Comments</h3>
-                  <CommentSection songId={song.id} currentUserId={currentUserId} />
+                  <CommentSection songId={song.id} currentUserId={currentUserId} isAuthenticated={isAuthenticated} />
                 </div>
               )}
             </div>

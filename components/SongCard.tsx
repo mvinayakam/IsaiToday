@@ -61,6 +61,7 @@ export default function SongCard({
   const [currentTags, setCurrentTags] = useState<string[]>(tags);
 
   const thumbnailUrl = `https://img.youtube.com/vi/${song.youtubeId}/maxresdefault.jpg`;
+  const thumbnailFallback = `https://img.youtube.com/vi/${song.youtubeId}/hqdefault.jpg`;
   const canEdit = currentUserId && song.addedBy === currentUserId;
 
   const handleLike = () => {
@@ -102,11 +103,20 @@ export default function SongCard({
         className="relative aspect-video rounded-t-xl overflow-hidden bg-muted group"
         data-testid={`thumbnail-${song.youtubeId}`}
       >
-        <img 
-          src={thumbnailUrl} 
+        <img
+          src={thumbnailUrl}
           alt={song.title}
           className="w-full h-full object-cover transition-transform duration-200 group-hover:scale-105"
           loading="lazy"
+          onLoad={(e) => {
+            // YouTube silently returns a 120×90 placeholder (HTTP 200) when maxresdefault doesn't exist
+            const img = e.currentTarget;
+            if (img.naturalWidth <= 120) img.src = thumbnailFallback;
+          }}
+          onError={(e) => {
+            const img = e.currentTarget;
+            if (img.src !== thumbnailFallback) img.src = thumbnailFallback;
+          }}
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
         <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-200" />
@@ -115,6 +125,7 @@ export default function SongCard({
             size="icon"
             variant="secondary"
             className="absolute top-2 right-2"
+            aria-label={`Edit ${song.title}`}
             onClick={(e) => {
               e.stopPropagation();
               handleEdit();
@@ -128,6 +139,7 @@ export default function SongCard({
           size="icon"
           variant="default"
           className="absolute bottom-2 right-2 transition-transform duration-200 group-hover:scale-110"
+          aria-label={`Play ${song.title}`}
           onClick={(e) => {
             e.stopPropagation();
             handlePlay();
@@ -217,6 +229,7 @@ export default function SongCard({
             size="sm"
             variant="ghost"
             className="gap-1.5 px-2"
+            aria-label={liked ? `Unlike ${song.title}` : `Like ${song.title}`}
             onClick={(e) => {
               e.stopPropagation();
               handleLike();
@@ -226,14 +239,15 @@ export default function SongCard({
             <Heart className={`w-4 h-4 ${liked ? 'fill-primary text-primary' : ''}`} />
             <span className="text-xs">{likeCount}</span>
           </Button>
-          <div className="flex items-center gap-1.5 text-muted-foreground">
-            <Play className="w-4 h-4" />
+          <div className="flex items-center gap-1.5 text-muted-foreground" aria-label={`${plays} plays`}>
+            <Play className="w-4 h-4" aria-hidden="true" />
             <span className="text-xs">{plays}</span>
           </div>
           <Button
             size="sm"
             variant="ghost"
             className="ml-auto px-2"
+            aria-label={`Share ${song.title}`}
             onClick={(e) => {
               e.stopPropagation();
               onShare?.();

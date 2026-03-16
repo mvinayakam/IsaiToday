@@ -118,6 +118,10 @@ export default function FeedCarousel({
           )}
         </div>
 
+        {songs.length === 0 ? (
+          <p className="text-muted-foreground text-sm py-6">Nothing here yet — check back soon!</p>
+        ) : null}
+
         <div className="flex overflow-x-auto gap-4 pb-4 snap-x snap-mandatory scrollbar-hide -mx-4 px-4">
           {songs.map((item, index) => (
             <div key={item.song.youtubeId} className="snap-start">

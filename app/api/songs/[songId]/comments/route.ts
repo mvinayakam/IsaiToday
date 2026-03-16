@@ -4,6 +4,24 @@ import { storage } from "@/lib/storage";
 import { db } from "@/lib/db";
 import { insertCommentSchema, comments, users, userMentions } from "@shared/schema";
 import { eq, desc } from "drizzle-orm";
+import Groq from "groq-sdk";
+
+const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
+
+async function isNSFW(text: string): Promise<boolean> {
+  if (!process.env.GROQ_API_KEY) return false; // skip if not configured
+  try {
+    const response = await groq.chat.completions.create({
+      model: "llama-guard-3-8b",
+      messages: [{ role: "user", content: text }],
+      max_tokens: 10,
+    });
+    const result = response.choices[0]?.message?.content?.trim().toLowerCase() ?? "";
+    return result.startsWith("unsafe");
+  } catch {
+    return false; // fail open — don't block on API errors
+  }
+}
 
 export async function GET(_req: Request, { params }: { params: { songId: string } }) {
   try {
@@ -37,6 +55,24 @@ export async function POST(req: Request, { params }: { params: { songId: string 
 
   try {
     const body = await req.json();
+
+    // Basic length validation
+    const trimmed = (body.content ?? "").trim();
+    if (!trimmed) {
+      return NextResponse.json({ message: "Comment cannot be empty." }, { status: 400 });
+    }
+    if (trimmed.length > 500) {
+      return NextResponse.json({ message: "Comment must be 500 characters or fewer." }, { status: 400 });
+    }
+
+    // NSFW moderation via Groq llama-guard-3-8b
+    if (await isNSFW(trimmed)) {
+      return NextResponse.json(
+        { message: "Your comment contains inappropriate content and cannot be posted." },
+        { status: 400 }
+      );
+    }
+
     const validatedData = insertCommentSchema.parse({ songId: params.songId, userId, content: body.content });
     const comment = await storage.createComment(validatedData);
 
